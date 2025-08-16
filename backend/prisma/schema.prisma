@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SuperAdmin {
+  id        String   @id @default(uuid())
+  login     String   @unique
+  password  String   // Будем хранить хешированный пароль
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Добавляем индексы для оптимизации
+  @@index([login])
+  @@map("super_admins") // Опционально: кастомное имя таблицы
+}
+
+enum Role {
+  READ
+  EDIT
+  CREATE
+  COURSE_MANAGEMENT
+}
+
+model User {
+  id        String   @id @default(uuid())
+  login     String   @unique
+  password  String
+  name      String?
+  roles     Role[]   // Изменяем на массив ролей
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("users")
+}
+
+model Student {
+  id        String         @id @default(uuid())
+  fullName  String
+  passport  String         @unique
+  rank      String
+  phone     String?
+  courses   StudentCourse[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([fullName])
+  @@map("students")
+}
+
+model Course {
+  id        String         @id @default(uuid())
+  name      String         @unique
+  prefix    String         @unique @db.VarChar(10)
+  students  StudentCourse[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@map("courses")
+}
+
+model StudentCourse {
+  id                String   @id @default(uuid())
+  studentId         String
+  courseId          String
+  examResult        Boolean  @default(false)
+  certificateNumber String?
+  certificateUrl    String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, courseId])
+  @@index([certificateNumber])
+  @@map("student_courses")
+}
+
+model CertificateCounter {
+  id        String   @id @default(uuid())
+  prefix    String   @unique
+  lastCount Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("certificate_counters")
+}
