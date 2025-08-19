@@ -2,7 +2,7 @@
 import { z } from "zod";
 import { router, protectedProcedure } from "../trpc";
 import prisma from "../prisma";
-import { formatISO, startOfDay, endOfDay, subDays, addDays } from "date-fns";
+import { formatISO, startOfDay, endOfDay } from "date-fns";
 
 export const studentCourseRouter = router({
   getByDate: protectedProcedure

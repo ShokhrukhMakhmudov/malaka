@@ -11,7 +11,6 @@ export const appRouter = t.router({
   student: studentRouter,
   studentCourse: studentCourseRouter,
   dashboard: dashboardRouter,
-  // ... другие роутеры
 });
 
 export type AppRouter = typeof appRouter;

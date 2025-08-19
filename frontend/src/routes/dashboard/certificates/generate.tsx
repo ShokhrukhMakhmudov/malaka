@@ -376,7 +376,7 @@ function GenerateCertificatesPage() {
               <TableHead>Kurs</TableHead>
               <TableHead>Sana</TableHead>
               <TableHead>Imtihon</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Sertifikat</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -449,7 +449,13 @@ function GenerateCertificatesPage() {
 
                   <TableCell>
                     {course.certificateNumber ? (
-                      <span className="text-green-600">Sertifikat mavjud</span>
+                      <a
+                        href={course.certificateUrl as string}
+                        target="_blank"
+                        className="text-green-600 underline"
+                      >
+                        {course.certificateNumber}
+                      </a>
                     ) : (
                       <span className="text-yellow-600">Sertifikat yo'q</span>
                     )}

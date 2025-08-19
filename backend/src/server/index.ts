@@ -225,7 +225,7 @@ const TEMPLATE_COORDINATES: {
   certificateSeries: { x: "center", y: 372 },
   description: { x: "center", y: 310 },
   date: { x: 232, y: 71 },
-  certificateNumber: { x: 707, y: 69 },
+  certificateNumber: { x: 709, y: 69 },
   qrCode: { x: 50, y: 30, size: 105 },
 };
 
@@ -269,9 +269,9 @@ app.post("/certificate/generate", async (req, res) => {
     const nextCount = counter.lastCount + 1;
 
     if (studentCourse.certificateNumber) {
-      certificateNumber = studentCourse.certificateNumber;
+      certificateNumber = studentCourse.certificateNumber.slice(3);
     } else {
-      certificateNumber = nextCount.toString().padStart(6, "0");
+      certificateNumber = nextCount.toString().padStart(5, "0");
     }
 
     const certificateSeries = `${studentCourse.course.prefix} ${certificateNumber}`;
@@ -307,9 +307,15 @@ app.post("/certificate/generate", async (req, res) => {
     pdfDoc.registerFontkit(fontKit);
 
     // Путь к шрифтам
-    const fontPath = path.join(__dirname, "../fonts/Roboto-Regular.ttf");
-    const fontItalicPath = path.join(__dirname, "../fonts/Roboto-Italic.ttf");
-    const fontBoldPath = path.join(__dirname, "../fonts/Roboto-Bold.ttf");
+    const fontPath = path.join(__dirname, "../fonts/TimesNewRomanMTStd.ttf");
+    const fontItalicPath = path.join(
+      __dirname,
+      "../fonts/TimesNewRomanMTStd-Italic.ttf"
+    );
+    const fontBoldPath = path.join(
+      __dirname,
+      "../fonts/TimesNewRomanMTStd-Bold.ttf"
+    );
 
     if (!fs.existsSync(fontPath) || !fs.existsSync(fontBoldPath)) {
       return res.status(500).json({ message: "Font files not found" });
@@ -583,10 +589,10 @@ async function generateCertificate({
     let certificateNumber;
 
     if (studentCourse.certificateNumber) {
-      certificateNumber = studentCourse.certificateNumber;
+      certificateNumber = studentCourse.certificateNumber.slice(3);
     } else {
       const nextCount = counter.lastCount + 1;
-      certificateNumber = nextCount.toString().padStart(6, "0");
+      certificateNumber = nextCount.toString().padStart(5, "0");
     }
 
     const certificateSeries = `${studentCourse.course.prefix} ${certificateNumber}`;

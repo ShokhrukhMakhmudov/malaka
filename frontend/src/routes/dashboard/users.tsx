@@ -50,7 +50,7 @@ function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null)
 
   // Запрос списка пользователей
-  const { data: users, isLoading } = trpc.auth.listUsers.useQuery()
+  const { data: users, isLoading, refetch } = trpc.auth.listUsers.useQuery()
 
   // Мутации для управления пользователями
   const createUser = trpc.auth.createUser.useMutation()
@@ -80,6 +80,7 @@ function UsersPage() {
 
       setIsCreateDialogOpen(false)
       resetForm()
+      refetch()
       queryClient.invalidateQueries({ queryKey: ['auth.listUsers'] })
     } catch (error) {
       toast('Ошибка при создании пользователя', {
@@ -109,6 +110,7 @@ function UsersPage() {
 
       setIsEditDialogOpen(false)
       resetForm()
+      refetch()
       queryClient.invalidateQueries({ queryKey: ['auth.listUsers'] })
     } catch (error) {
       toast('Ошибка при обновлении пользователя', {
@@ -131,6 +133,7 @@ function UsersPage() {
       })
 
       setIsDeleteDialogOpen(false)
+      refetch()
       queryClient.invalidateQueries({ queryKey: ['auth.listUsers'] })
     } catch (error) {
       toast('Ошибка при удалении пользователя', {

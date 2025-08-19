@@ -218,7 +218,7 @@ const CourseCard = ({ course }: { course: Omit<CourseStats, 'prefix'> }) => {
           </div>
           <div className="w-full bg-white/20 rounded-full h-2">
             <div
-              className="bg-green-400 h-2 rounded-full"
+              className="bg-white h-2 rounded-full"
               style={{ width: `${passRate}%` }}
             ></div>
           </div>
@@ -230,7 +230,7 @@ const CourseCard = ({ course }: { course: Omit<CourseStats, 'prefix'> }) => {
       </div>
 
       <div className="px-6 pb-4 ">
-        <div className="text-sm flex items-center justify-between border-green-400 border-1 rounded-md py-1 px-2">
+        <div className="text-sm flex items-center justify-between border-white border-1 rounded-md py-1 px-2">
           <span className="text-white/70">Muvaffaqiyatli:</span>
           <span className="font-medium text-white text-lg">
             {course.passedStudents}
