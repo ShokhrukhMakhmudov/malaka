@@ -771,31 +771,31 @@ async function generateCertificate({
     };
   }
 }
-// // Инициализация первого супер-админа при запуске
-// async function initializeFirstAdmin() {
-//   const adminCount = await prisma.superAdmin.count();
+// Инициализация первого супер-админа при запуске
+async function initializeFirstAdmin() {
+  const adminCount = await prisma.superAdmin.count();
 
-//   if (adminCount === 0) {
-//     const defaultLogin = process.env.DEFAULT_ADMIN_LOGIN || "admin";
-//     const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || "admin123";
-//     const defaultName = process.env.DEFAULT_ADMIN_NAME || "Super Admin";
+  if (adminCount === 0) {
+    const defaultLogin = process.env.DEFAULT_ADMIN_LOGIN || "admin";
+    const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || "admin123";
+    const defaultName = process.env.DEFAULT_ADMIN_NAME || "Super Admin";
 
-//     const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
-//     await prisma.superAdmin.create({
-//       data: {
-//         login: defaultLogin,
-//         password: hashedPassword,
-//         name: defaultName,
-//       },
-//     });
+    await prisma.superAdmin.create({
+      data: {
+        login: defaultLogin,
+        password: hashedPassword,
+        name: defaultName,
+      },
+    });
 
-//     console.log(`Created first super admin: ${defaultLogin}`);
-//   }
-// }
+    console.log(`Created first super admin: ${defaultLogin}`);
+  }
+}
 
 // Запуск сервера
 app.listen(PORT, async () => {
-  // await initializeFirstAdmin();
+  await initializeFirstAdmin();
   console.log(`Server running on http://localhost:${PORT}`);
 });
