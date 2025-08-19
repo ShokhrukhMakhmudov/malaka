@@ -31,26 +31,10 @@ export default function Home() {
     totalStudents > 0 ? Math.round((passedExams / totalStudents) * 100) : 0
 
   return (
-    <div className="h-full bg-gradient-to-br homepage">
+    <div className="relative z-10 homepage h-full">
       <Header />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 pt-32">
-        {/* <div className="text-center mb-16">
-          <div className="flex flex-col items-center justify-center">
-            <div className="relative w-56 h-56 mb-8">
-             <div className="absolute inset-0 bg-blue-600 rounded-full opacity-20 blur-xl animate-pulse"></div> 
-              <img
-                src="/logo.png"
-                className="w-full h-full object-contain"
-                alt="Логотип Института"
-              />
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-800 dark:text-white mb-4">
-              ICHKI ISHLAR VAZIRLIGI MALAKA OSHIRISH INSTITUTI
-            </h1>
-          </div>
-        </div> */}
-
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 pt-34">
         {/* Общая статистика */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <StatCard
@@ -58,7 +42,7 @@ export default function Home() {
             value={totalStudents}
             icon={
               <svg
-                className="w-8 h-8 text-blue-600 dark:text-blue-400"
+                className="w-8 h-8 text-blue-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -71,7 +55,6 @@ export default function Home() {
                 />
               </svg>
             }
-            color="blue"
             loading={studentCountQuery.isLoading}
           />
 
@@ -80,7 +63,7 @@ export default function Home() {
             value={totalCourses}
             icon={
               <svg
-                className="w-8 h-8 text-green-600 dark:text-green-400"
+                className="w-8 h-8 text-green-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -93,7 +76,6 @@ export default function Home() {
                 />
               </svg>
             }
-            color="green"
             loading={studentCountQuery.isLoading}
           />
 
@@ -102,7 +84,7 @@ export default function Home() {
             value={activeCourses}
             icon={
               <svg
-                className="w-8 h-8 text-purple-600 dark:text-purple-400"
+                className="w-8 h-8 text-purple-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -115,16 +97,15 @@ export default function Home() {
                 />
               </svg>
             }
-            color="purple"
             loading={studentCountQuery.isLoading}
           />
 
           <StatCard
-            title="Imtihonar natijasi"
+            title="Imtihon natijasi"
             value={`${passRate}%`}
             icon={
               <svg
-                className="w-8 h-8 text-yellow-600 dark:text-yellow-400"
+                className="w-8 h-8 text-yellow-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -137,15 +118,16 @@ export default function Home() {
                 />
               </svg>
             }
-            color="yellow"
             loading={studentCountQuery.isLoading}
           />
         </div>
 
         {/* Заголовок статистики курсов */}
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-white">Statistika</h2>
-          <div className="text-white">
+          <h2 className="text-3xl font-bold text-white drop-shadow-md">
+            Statistika
+          </h2>
+          <div className="text-white drop-shadow-sm">
             Faol kurslar soni:{' '}
             <span className="font-medium">{activeCourses}</span>
           </div>
@@ -157,17 +139,15 @@ export default function Home() {
             {[1, 2, 3, 4, 5, 6].map((item) => (
               <div
                 key={item}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
+                className="bg-white/10 backdrop-blur-md rounded-xl shadow-lg overflow-hidden p-6"
               >
-                <div className="p-6">
-                  <div className="animate-pulse">
-                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-6"></div>
-                    <div className="space-y-3">
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-                      <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-                    </div>
+                <div className="animate-pulse">
+                  <div className="h-6 bg-white/20 rounded w-3/4 mb-4"></div>
+                  <div className="h-4 bg-white/20 rounded w-1/4 mb-6"></div>
+                  <div className="space-y-3">
+                    <div className="h-4 bg-white/20 rounded w-full"></div>
+                    <div className="h-2 bg-white/20 rounded w-full"></div>
+                    <div className="h-4 bg-white/20 rounded w-1/2"></div>
                   </div>
                 </div>
               </div>
@@ -180,9 +160,9 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-12 text-center">
+          <div className="bg-white/10 backdrop-blur-md rounded-xl shadow-lg p-12 text-center">
             <svg
-              className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500"
+              className="w-16 h-16 mx-auto text-white/50"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -194,11 +174,11 @@ export default function Home() {
                 d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <h3 className="text-xl font-medium text-gray-800 dark:text-white mt-4">
-              Данные о курсах отсутствуют
+            <h3 className="text-xl font-medium text-white mt-4 drop-shadow-sm">
+              Kurslar mavjud emas
             </h3>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">
-              Информация о курсах будет доступна после их создания
+            <p className="text-white/70 mt-2 drop-shadow-sm">
+              Kurslar yaratilgandan so'ng ma'lumotlar paydo bo'ladi
             </p>
           </div>
         )}
@@ -206,52 +186,55 @@ export default function Home() {
     </div>
   )
 }
-
 // Компонент карточки курса
 const CourseCard = ({ course }: { course: Omit<CourseStats, 'prefix'> }) => {
+  const passRate =
+    course.totalStudents > 0
+      ? Math.round((course.passedStudents / course.totalStudents) * 100)
+      : 0
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+    <div className="bg-white/10 backdrop-blur-md rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-white/10">
       <div className="p-6">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+            <h3 className="text-xl font-bold text-white drop-shadow-sm">
               {course.courseName}
             </h3>
           </div>
-          <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+          <span className="bg-blue-400/20 text-white font-semibold px-2.5 py-0.5 rounded-full backdrop-blur-sm">
             {course.totalStudents} ta
           </span>
         </div>
 
         <div className="mt-4">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-between text-sm mb-1">
+            <span className="text-white/80 drop-shadow-sm">
               Imtihon natijasi
             </span>
-            <span className="font-medium">
-              {course.passedStudents} (
-              {course.totalStudents > 0
-                ? Math.round(
-                    (course.passedStudents / course.totalStudents) * 100,
-                  )
-                : 0}
-              %)
+            <span className="font-medium text-white drop-shadow-sm">
+              {passRate}%
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2 mt-1 dark:bg-gray-700">
+          <div className="w-full bg-white/20 rounded-full h-2">
             <div
-              className="bg-green-600 h-2 rounded-full"
-              style={{
-                width: `${
-                  course.totalStudents > 0
-                    ? Math.round(
-                        (course.passedStudents / course.totalStudents) * 100,
-                      )
-                    : 0
-                }%`,
-              }}
+              className="bg-green-400 h-2 rounded-full"
+              style={{ width: `${passRate}%` }}
             ></div>
           </div>
+          <div className="flex justify-between mt-1">
+            <span className="text-xs text-white/60">0%</span>
+            <span className="text-xs text-white/60">100%</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-6 pb-4 ">
+        <div className="text-sm flex items-center justify-between border-green-400 border-1 rounded-md py-1 px-2">
+          <span className="text-white/70">Muvaffaqiyatli:</span>
+          <span className="font-medium text-white text-lg">
+            {course.passedStudents}
+          </span>
         </div>
       </div>
     </div>
@@ -263,48 +246,23 @@ const StatCard = ({
   title,
   value,
   icon,
-  color,
   loading,
 }: {
   title: string
   value: string | number
   icon: React.ReactNode
-  color: string
   loading: boolean
 }) => {
-  const colorClasses: {
-    [key: string]: string
-  } = {
-    blue: 'border-blue-100 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/20',
-    green:
-      'border-green-100 dark:border-green-900 bg-green-50 dark:bg-green-900/20',
-    purple:
-      'border-purple-100 dark:border-purple-900 bg-purple-50 dark:bg-purple-900/20',
-    yellow:
-      'border-yellow-100 dark:border-yellow-900 bg-yellow-50 dark:bg-yellow-900/20',
-  }
-
-  const iconClasses: {
-    [key: string]: string
-  } = {
-    blue: 'bg-blue-100 dark:bg-blue-900',
-    green: 'bg-green-100 dark:bg-green-900',
-    purple: 'bg-purple-100 dark:bg-purple-900',
-    yellow: 'bg-yellow-100 dark:bg-yellow-900',
-  }
-
   return (
-    <div className={`rounded-2xl shadow-lg p-6 border ${colorClasses[color]}`}>
+    <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-lg p-6 border border-white/10">
       <div className="flex items-center">
-        <div className={`p-3 rounded-lg mr-4 ${iconClasses[color]}`}>
-          {icon}
-        </div>
+        <div className="p-3 rounded-lg mr-4 bg-white/20">{icon}</div>
         <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
+          <p className="text-sm text-white/80 drop-shadow-sm">{title}</p>
           {loading ? (
-            <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded mt-1 animate-pulse"></div>
+            <div className="h-8 w-16 bg-white/20 rounded mt-1 animate-pulse"></div>
           ) : (
-            <p className="text-3xl font-bold text-gray-800 dark:text-white">
+            <p className="text-3xl font-bold text-white drop-shadow-sm">
               {value}
             </p>
           )}
