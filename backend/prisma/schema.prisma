@@ -62,7 +62,7 @@ model Student {
 model Course {
   id        String         @id @default(uuid())
   name      String         @unique
-  prefix    String         @unique @db.VarChar(10)
+  prefix    String         @db.VarChar(10)
   students  StudentCourse[]
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt

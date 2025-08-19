@@ -13,6 +13,7 @@ import { PDFDocument, rgb } from "pdf-lib";
 import fontKit from "@pdf-lib/fontkit";
 import QRCode from "qrcode";
 import { formatDate } from "date-fns";
+import { StudentCourse } from "../generated/prisma";
 
 dotenv.config();
 
@@ -147,7 +148,7 @@ app.post("/api/students/import", async (req, res) => {
         if (existingStudent) {
           // Проверяем, есть ли уже связь с этим курсом
           const hasCourse = existingStudent.courses.some(
-            (sc) => sc.courseId === courseId
+            (sc: StudentCourse) => sc.courseId === courseId
           );
 
           if (hasCourse) {
@@ -264,8 +265,15 @@ app.post("/certificate/generate", async (req, res) => {
     }
 
     // Генерируем новый номер сертификата
+    let certificateNumber;
     const nextCount = counter.lastCount + 1;
-    const certificateNumber = nextCount.toString().padStart(6, "0");
+
+    if (studentCourse.certificateNumber) {
+      certificateNumber = studentCourse.certificateNumber;
+    } else {
+      certificateNumber = nextCount.toString().padStart(6, "0");
+    }
+
     const certificateSeries = `${studentCourse.course.prefix} ${certificateNumber}`;
 
     // Проверяем, не существует ли уже такого номера
@@ -279,11 +287,13 @@ app.post("/certificate/generate", async (req, res) => {
         .json({ message: "Certificate number already exists" });
     }
 
-    // Обновляем счетчик
-    await prisma.certificateCounter.update({
-      where: { id: counter.id },
-      data: { lastCount: nextCount },
-    });
+    if (!studentCourse.certificateNumber) {
+      // Обновляем счетчик
+      await prisma.certificateCounter.update({
+        where: { id: counter.id },
+        data: { lastCount: nextCount },
+      });
+    }
 
     // Путь к шаблону PDF
     const templatePath = path.join(__dirname, "../template/template.pdf");
@@ -408,7 +418,10 @@ app.post("/certificate/generate", async (req, res) => {
 
     // Сохранение PDF
     const pdfBytes = await pdfDoc.save();
-    const outputDir = path.join(__dirname, "../../../public/certificates");
+    const outputDir = path.join(
+      __dirname,
+      "../../../frontend/public/certificates"
+    );
 
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
@@ -567,8 +580,15 @@ async function generateCertificate({
     }
 
     // Генерируем новый номер сертификата
-    const nextCount = counter.lastCount + 1;
-    const certificateNumber = nextCount.toString().padStart(6, "0");
+    let certificateNumber;
+
+    if (studentCourse.certificateNumber) {
+      certificateNumber = studentCourse.certificateNumber;
+    } else {
+      const nextCount = counter.lastCount + 1;
+      certificateNumber = nextCount.toString().padStart(6, "0");
+    }
+
     const certificateSeries = `${studentCourse.course.prefix} ${certificateNumber}`;
 
     // Проверяем, не существует ли уже такого номера
@@ -580,12 +600,15 @@ async function generateCertificate({
       throw new Error("Certificate number already exists");
     }
 
-    // Обновляем счетчик
-    await prisma.certificateCounter.update({
-      where: { id: counter.id },
-      data: { lastCount: nextCount },
-    });
+    if (!studentCourse.certificateNumber) {
+      const nextCount = counter.lastCount + 1;
 
+      // Обновляем счетчик
+      await prisma.certificateCounter.update({
+        where: { id: counter.id },
+        data: { lastCount: nextCount },
+      });
+    }
     // Путь к шаблону PDF
     const templatePath = path.join(__dirname, "../template/template.pdf");
 

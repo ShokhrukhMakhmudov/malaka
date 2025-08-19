@@ -14,18 +14,22 @@ export default function Header() {
             width={60}
             height={60}
           />
-          <p className="font-semibold text-black dark:text-white text-[12px] sm:text-lg">
+          <p className="font-semibold dark:text-black text-white text-[12px] sm:text-lg">
             ICHKI ISHLAR VAZIRLIGI <br /> MALAKA OSHIRISH INSTITUTI
           </p>
         </div>
         <div className="flex items-center gap-3">
           <ModeToggle />
 
-          <a href="https://t.me/IIVMOI_Uz" target="_blank">
+          <a
+            className="cursor-pointer hover:scale-110"
+            href="https://t.me/IIVMOI_Uz"
+            target="_blank"
+          >
             <svg
               strokeWidth="0"
               viewBox="0 0 32 32"
-              className="cursor-pointer w-[25px] h-[25px] sm:w-[30px] sm:h-[30px] fill-black dark:fill-white"
+              className="cursor-pointer w-[25px] h-[25px] sm:w-[30px] sm:h-[30px] dark:fill-black fill-white"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
@@ -35,6 +39,7 @@ export default function Header() {
             </svg>
           </a>
           <a
+            className="cursor-pointer hover:scale-110"
             href="https://www.google.com/maps/place/IIV+Malaka+Oshirish+Instituti/@41.2531233,69.3708856,18z/data=!4m13!1m7!3m6!1s0x0:0xa90dcc5b0e9c0477!2zNDHCsDE1JzExLjEiTiA2OcKwMjInMTguMiJF!3b1!8m2!3d41.253086!4d69.371709!3m4!1s0x38ae5f0ec2c37eab:0x10917df4aa48842a!8m2!3d41.2524368!4d69.3714714"
             target="_blank"
           >
@@ -42,7 +47,7 @@ export default function Header() {
               strokeWidth="2"
               viewBox="0 0 24 24"
               aria-hidden="true"
-              className="cursor-pointer w-[25px] h-[25px] sm:w-[30px] sm:h-[30px] fill-white dark:fill-black stroke-black dark:stroke-white"
+              className="cursor-pointer w-[25px] h-[25px] sm:w-[30px] sm:h-[30px] fill-transparent dark:stroke-black stroke-white"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
@@ -57,11 +62,14 @@ export default function Header() {
               ></path>
             </svg>
           </a>
-          <a href="tel:+998935129494">
+          <a
+            className="cursor-pointer hover:scale-110"
+            href="tel:+998935129494"
+          >
             <svg
               strokeWidth="0"
               viewBox="0 0 24 24"
-              className="cursor-pointer w-[25px] h-[25px] sm:w-[30px] sm:h-[30px] fill-black dark:fill-white"
+              className="cursor-pointer w-[25px] h-[25px] sm:w-[30px] sm:h-[30px] dark:fill-black fill-white"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path d="M17.707 12.293a.999.999 0 0 0-1.414 0l-1.594 1.594c-.739-.22-2.118-.72-2.992-1.594s-1.374-2.253-1.594-2.992l1.594-1.594a.999.999 0 0 0 0-1.414l-4-4a.999.999 0 0 0-1.414 0L3.581 5.005c-.38.38-.594.902-.586 1.435.023 1.424.4 6.37 4.298 10.268s8.844 4.274 10.269 4.298h.028c.528 0 1.027-.208 1.405-.586l2.712-2.712a.999.999 0 0 0 0-1.414l-4-4.001zm-.127 6.712c-1.248-.021-5.518-.356-8.873-3.712-3.366-3.366-3.692-7.651-3.712-8.874L7 4.414 9.586 7 8.293 8.293a1 1 0 0 0-.272.912c.024.115.611 2.842 2.271 4.502s4.387 2.247 4.502 2.271a.991.991 0 0 0 .912-.271L17 14.414 19.586 17l-2.006 2.005z"></path>

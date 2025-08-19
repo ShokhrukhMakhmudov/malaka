@@ -32,7 +32,7 @@ export function LoginDialog() {
         <Button
           size={'lg'}
           variant="outline"
-          className="bg-transparent text-xl pb-1 tracking-wide cursor-pointer text-black border-black dark:text-white dark:border-white hover:scale-105 active:scale-95"
+          className="bg-transparent text-xl pb-1 tracking-wide cursor-pointer dark:text-black dark:border-black text-white border-white hover:scale-105 active:scale-95"
         >
           Kirish
         </Button>

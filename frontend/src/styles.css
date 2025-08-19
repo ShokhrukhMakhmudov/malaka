@@ -158,3 +158,10 @@ button[aria-label='Edit course'] {
 button[aria-label='Delete course'] {
   @apply transition-colors hover:bg-destructive/10 hover:text-destructive;
 }
+
+.homepage {
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url('/bg.png') no-repeat;
+  background-size: cover;
+}

@@ -31,16 +31,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
-import { format, parseISO } from 'date-fns'
 import { baseUrl } from '@/lib/api'
 
-// type Data = {
-//   fio: string
-//   passport: string
-//   unvon: string
-//   phone: string
-//   examResult?: boolean
-// }
 export default function ImportStudentsDialog({
   onSuccess,
   className,
@@ -308,57 +300,58 @@ export default function ImportStudentsDialog({
           })),
       }
 
-      const sendData = {
-        courseId,
-        students: studentsData
-          .filter((_, index) => !selectedStudents.has(index))
-          .map((student) => ({
-            fullName: student.fio,
-            passport: String(student.passport),
-            rank: student.unvon,
-            phone: student.phone,
-            examResult: false,
-          })),
-      }
+      if (studentsData.length !== selectedStudents.size) {
+        const sendData = {
+          courseId,
+          students: studentsData
+            .filter((_, index) => !selectedStudents.has(index))
+            .map((student) => ({
+              fullName: student.fio,
+              passport: String(student.passport),
+              rank: student.unvon,
+              phone: student.phone,
+              examResult: false,
+            })),
+        }
 
-      const response = await fetch(baseUrl + '/api/students/import', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(sendData),
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        toast(
-          <div>
-            <p>Import natijalari:</p>
-            <ul className="mt-2">
-              <li>Yangi tinglovchilar: {result.stats.created}</li>
-              <li>Yangilangan tinglovchilar: {result.stats.updated}</li>
-              <li>O'tkazib yuborilgan: {result.stats.skipped}</li>
-              <li>Jami: {result.stats.total}</li>
-            </ul>
-          </div>,
-          {
-            duration: 5000,
-            position: 'top-center',
-            icon: <CircleCheckBig className="text-green-500 w-7 h-7 pe-2" />,
-            style: {
-              width: 'fit-content',
-              background: 'white',
-              color: 'black',
-              border: '3px solid #00c951',
-              fontSize: '18px',
-            },
+        const response = await fetch(baseUrl + '/api/students/import', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        )
-      } else {
-        throw new Error(result.error || 'Failed to import students')
-      }
+          body: JSON.stringify(sendData),
+        })
 
+        const result = await response.json()
+
+        if (response.ok) {
+          toast(
+            <div>
+              <p>Import natijalari:</p>
+              <ul className="mt-2">
+                <li>Yangi tinglovchilar: {result.stats.created}</li>
+                <li>Yangilangan tinglovchilar: {result.stats.updated}</li>
+                <li>O'tkazib yuborilgan: {result.stats.skipped}</li>
+                <li>Jami: {result.stats.total}</li>
+              </ul>
+            </div>,
+            {
+              duration: 5000,
+              position: 'top-right',
+              icon: <CircleCheckBig className="text-green-500 w-7 h-7 pe-2" />,
+              style: {
+                width: 'fit-content',
+                background: 'white',
+                color: 'black',
+                border: '3px solid #00c951',
+                fontSize: '18px',
+              },
+            },
+          )
+        } else {
+          throw new Error(result.error || 'Failed to import students')
+        }
+      }
       const results = {
         success: 0,
         errors: 0,

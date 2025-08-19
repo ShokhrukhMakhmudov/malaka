@@ -31,15 +31,14 @@ export default function Home() {
     totalStudents > 0 ? Math.round((passedExams / totalStudents) * 100) : 0
 
   return (
-    <div className="h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="h-full bg-gradient-to-br homepage">
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 pt-32">
-        {/* Заголовок и логотип */}
-        <div className="text-center mb-16">
+        {/* <div className="text-center mb-16">
           <div className="flex flex-col items-center justify-center">
             <div className="relative w-56 h-56 mb-8">
-              {/* <div className="absolute inset-0 bg-blue-600 rounded-full opacity-20 blur-xl animate-pulse"></div> */}
+             <div className="absolute inset-0 bg-blue-600 rounded-full opacity-20 blur-xl animate-pulse"></div> 
               <img
                 src="/logo.png"
                 className="w-full h-full object-contain"
@@ -50,7 +49,7 @@ export default function Home() {
               ICHKI ISHLAR VAZIRLIGI MALAKA OSHIRISH INSTITUTI
             </h1>
           </div>
-        </div>
+        </div> */}
 
         {/* Общая статистика */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -145,10 +144,8 @@ export default function Home() {
 
         {/* Заголовок статистики курсов */}
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white">
-            Statistika
-          </h2>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
+          <h2 className="text-3xl font-bold text-white">Statistika</h2>
+          <div className="text-white">
             Faol kurslar soni:{' '}
             <span className="font-medium">{activeCourses}</span>
           </div>
