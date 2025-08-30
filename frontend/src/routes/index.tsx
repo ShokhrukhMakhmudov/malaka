@@ -59,7 +59,7 @@ export default function Home() {
           />
 
           <StatCard
-            title="Kurslar"
+            title="O'quv kurslar"
             value={totalCourses}
             icon={
               <svg
@@ -80,7 +80,7 @@ export default function Home() {
           />
 
           <StatCard
-            title="Faol kurslar"
+            title="Faol o'quv kurslar"
             value={activeCourses}
             icon={
               <svg

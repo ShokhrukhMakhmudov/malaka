@@ -10,7 +10,7 @@ function DashboardLayout() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <main className="w-full">
+      <main className="w-full bg-white">
         <SidebarTrigger />
         <section className="px-6">
           <Outlet />

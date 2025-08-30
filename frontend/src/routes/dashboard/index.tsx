@@ -72,7 +72,9 @@ export default function DashboardPage() {
 
         <Card className="gap-2">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Kurslar soni</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              O'quv kurslar soni
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-row items-center justify-between">
             {isCountLoading ? (
@@ -89,7 +91,7 @@ export default function DashboardPage() {
         <Card className="gap-2">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
-              Imtihon natikalari
+              Imtihon natijalari
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-row items-center justify-between">
