@@ -15,6 +15,7 @@ import { loginAction } from './lib/loginAction'
 import { Loader2 } from 'lucide-react'
 import { Description } from '@radix-ui/react-dialog'
 import { useNavigate } from '@tanstack/react-router'
+import { authStore } from '@/stores/auth.store'
 
 export function LoginDialog() {
   const navigate = useNavigate()

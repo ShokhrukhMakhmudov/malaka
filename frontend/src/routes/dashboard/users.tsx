@@ -73,7 +73,7 @@ function UsersPage() {
         roles,
       })
 
-      toast('Пользователь успешно создан', {
+      toast('Foydalanuvchi muvaffaqiyatli yaratildi', {
         icon: <Plus className="text-green-500" />,
         position: 'top-center',
       })
@@ -103,7 +103,7 @@ function UsersPage() {
         roles,
       })
 
-      toast('Пользователь успешно обновлён', {
+      toast('Foydalanuvchi muvaffaqiyatli yangilandi', {
         icon: <Pencil className="text-green-500" />,
         position: 'top-center',
       })
@@ -127,7 +127,7 @@ function UsersPage() {
     try {
       await deleteUser.mutateAsync({ id: selectedUser.id })
 
-      toast('Пользователь успешно удалён', {
+      toast("Foydalanuvchi muvaffaqiyatli o'chirildi", {
         icon: <Trash2 className="text-green-500" />,
         position: 'top-center',
       })

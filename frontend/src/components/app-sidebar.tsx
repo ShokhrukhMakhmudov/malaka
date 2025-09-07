@@ -95,30 +95,30 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              {authStore.state.user?.isSuperAdmin && (
-                <SidebarMenuItem key={'users'}>
-                  <SidebarMenuButton
-                    asChild
-                    size={'lg'}
-                    className="text-2xl "
-                    isActive={state === '/dashboard/users'}
+
+              <SidebarMenuItem key={'users'}>
+                <SidebarMenuButton
+                  asChild
+                  size={'lg'}
+                  className="text-2xl "
+                  isActive={state === '/dashboard/users'}
+                >
+                  <Link
+                    to={'/dashboard/users'}
+                    className="gap-3 justify-stretch"
                   >
-                    <Link
-                      to={'/dashboard/users'}
-                      className="gap-3 justify-stretch"
-                    >
-                      <User2
-                        style={{
-                          width: '24px',
-                          height: '24px',
-                          marginTop: '1px',
-                        }}
-                      />
-                      <span>Foydalanuvchilar</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
+                    <User2
+                      style={{
+                        width: '24px',
+                        height: '24px',
+                        marginTop: '1px',
+                      }}
+                    />
+                    <span>Foydalanuvchilar</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
               <SidebarMenuItem key={'exit'}>
                 <SidebarMenuButton asChild size={'lg'} className="text-2xl ">
                   <Link

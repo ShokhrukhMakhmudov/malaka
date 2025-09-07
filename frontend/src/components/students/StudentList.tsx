@@ -19,11 +19,12 @@ import { Badge } from '../ui/badge.tsx'
 import ImportStudentsDialog from './ImportStudentsDialog.tsx'
 import { Button } from '../ui/button.tsx'
 import { Link } from '@tanstack/react-router'
+import { authStore } from '@/stores/auth.store.ts'
 
 export default function StudentList() {
   const [search, setSearch] = useState('')
   const { students, isLoading, refetch } = useStudents({ search })
-
+  const isAdmin = authStore.state.user?.isSuperAdmin
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value)
   }
@@ -35,17 +36,19 @@ export default function StudentList() {
           <Input
             placeholder="Qidirish..."
             value={search}
+            size={isAdmin ? 20 : 48}
             onChange={handleSearch}
-            className="max-w-sm"
           />
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <ImportStudentsDialog
-            onSuccess={refetch}
-            className="flex items-center"
-          />
-          <CreateStudentDialog onSuccess={refetch} />
-        </div>
+        {isAdmin && (
+          <div className="flex gap-2 w-full sm:w-auto">
+            <ImportStudentsDialog
+              onSuccess={refetch}
+              className="flex items-center"
+            />
+            <CreateStudentDialog onSuccess={refetch} />
+          </div>
+        )}
       </div>
 
       {isLoading ? (
@@ -89,7 +92,7 @@ export default function StudentList() {
         </div>
       ) : students && students.length > 0 ? (
         <div className="rounded-md border">
-          <Table className="text-lg">
+          <Table className="text-lg ">
             <TableHeader>
               <TableRow>
                 <TableHead>F.I.O</TableHead>
@@ -98,25 +101,27 @@ export default function StudentList() {
                 {/* <TableHead>Telefon</TableHead> */}
                 <TableHead className="flex items-center justify-center gap-2">
                   Kurs
-                  <Button variant="outline" size="icon" className="h-8 w-8">
-                    <Link to="/dashboard/courses/results">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                      </svg>
-                    </Link>
-                  </Button>
+                  {isAdmin && (
+                    <Button variant="outline" size="icon" className="h-8 w-8">
+                      <Link to="/dashboard/courses/results">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                        </svg>
+                      </Link>
+                    </Button>
+                  )}
                 </TableHead>
-                <TableHead className="w-32">Actions</TableHead>
+                {isAdmin && <TableHead className="w-32">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -181,26 +186,28 @@ export default function StudentList() {
                       '-'
                     )}
                   </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <EditStudentDialog
-                        student={{
-                          ...student,
-                          createdAt: new Date(student.createdAt),
-                          updatedAt: new Date(student.updatedAt),
-                        }}
-                        onSuccess={refetch}
-                      />
-                      <DeleteStudentDialog
-                        student={{
-                          ...student,
-                          createdAt: new Date(student.createdAt),
-                          updatedAt: new Date(student.updatedAt),
-                        }}
-                        onSuccess={refetch}
-                      />
-                    </div>
-                  </TableCell>
+                  {isAdmin && (
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <EditStudentDialog
+                          student={{
+                            ...student,
+                            createdAt: new Date(student.createdAt),
+                            updatedAt: new Date(student.updatedAt),
+                          }}
+                          onSuccess={refetch}
+                        />
+                        <DeleteStudentDialog
+                          student={{
+                            ...student,
+                            createdAt: new Date(student.createdAt),
+                            updatedAt: new Date(student.updatedAt),
+                          }}
+                          onSuccess={refetch}
+                        />
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
