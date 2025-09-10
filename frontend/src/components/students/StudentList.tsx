@@ -92,7 +92,7 @@ export default function StudentList() {
         </div>
       ) : students && students.length > 0 ? (
         <div className="rounded-md border">
-          <Table className="text-lg ">
+          <Table className="text-lg">
             <TableHeader>
               <TableRow>
                 <TableHead>F.I.O</TableHead>

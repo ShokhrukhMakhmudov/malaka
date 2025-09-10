@@ -42,9 +42,7 @@ export function LoginDialog() {
         <DialogHeader>
           <DialogTitle className="text-2xl">Tizimga kirish</DialogTitle>
         </DialogHeader>
-        <Description>
-          <p className="border-b border-gray-500"></p>
-        </Description>
+        <Description className="h-[2px] border-b border-gray-500"></Description>
         <form action={formAction}>
           <div className="grid gap-4">
             <div className="grid gap-3 ">

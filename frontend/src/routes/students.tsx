@@ -11,7 +11,7 @@ export const Route = createFileRoute('/students')({
 function StudentsPage() {
   const navigate = useNavigate()
   useEffect(() => {
-    if (!authStore.state.isAuth) {
+    if (true || !authStore.state.isAuth) {
       navigate({ to: '/' })
     }
   })

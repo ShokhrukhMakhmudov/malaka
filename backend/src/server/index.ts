@@ -281,7 +281,7 @@ app.post("/certificate/generate", async (req, res) => {
       where: { certificateNumber: certificateSeries },
     });
 
-    if (exists) {
+    if (exists && studentCourse.certificateNumber !== certificateSeries) {
       return res
         .status(400)
         .json({ message: "Certificate number already exists" });
@@ -391,13 +391,30 @@ app.post("/certificate/generate", async (req, res) => {
     );
 
     // Описание
-    message.split("\n").forEach((line: string, index: number) => {
-      addText(
-        line,
-        TEMPLATE_COORDINATES.description.x,
-        TEMPLATE_COORDINATES.description.y - 30 * index,
-        16
-      );
+    let boldIndex: number | null = null;
+    const messageLines = message
+      .split("\n")
+      .filter((line: string, index: number) => {
+        if (line.trim() === "") boldIndex = index;
+        return line;
+      });
+    messageLines.forEach((line: string, index: number) => {
+      if (boldIndex && index >= boldIndex) {
+        addText(
+          line,
+          TEMPLATE_COORDINATES.description.x,
+          TEMPLATE_COORDINATES.description.y - 30 * index,
+          16,
+          fontBold
+        );
+      } else {
+        addText(
+          line,
+          TEMPLATE_COORDINATES.description.x,
+          TEMPLATE_COORDINATES.description.y - 30 * index,
+          16
+        );
+      }
     });
 
     // Дата выдачи
@@ -602,7 +619,7 @@ async function generateCertificate({
       where: { certificateNumber: certificateSeries },
     });
 
-    if (exists) {
+    if (exists && studentCourse.certificateNumber !== certificateSeries) {
       throw new Error("Certificate number already exists");
     }
 
@@ -697,13 +714,30 @@ async function generateCertificate({
     );
 
     // Описание
-    message.split("\n").forEach((line: string, index: number) => {
-      addText(
-        line,
-        TEMPLATE_COORDINATES.description.x,
-        TEMPLATE_COORDINATES.description.y - 30 * index,
-        16
-      );
+    let boldIndex: number | null = null;
+    const messageLines = message
+      .split("\n")
+      .filter((line: string, index: number) => {
+        if (line.trim() === "") boldIndex = index;
+        return line;
+      });
+    messageLines.forEach((line: string, index: number) => {
+      if (boldIndex && index >= boldIndex) {
+        addText(
+          line,
+          TEMPLATE_COORDINATES.description.x,
+          TEMPLATE_COORDINATES.description.y - 30 * index,
+          16,
+          fontBold
+        );
+      } else {
+        addText(
+          line,
+          TEMPLATE_COORDINATES.description.x,
+          TEMPLATE_COORDINATES.description.y - 30 * index,
+          16
+        );
+      }
     });
 
     // Дата выдачи

@@ -162,6 +162,48 @@ export const studentRouter = router({
         data,
       });
     }),
+
+  getCertificatesByPassport: protectedProcedure
+    .input(z.object({ passport: z.string() }))
+    .query(async ({ input }) => {
+      const student = await prisma.student.findUnique({
+        where: { passport: input.passport },
+        include: {
+          courses: {
+            where: {
+              certificateNumber: { not: null },
+              certificateUrl: { not: null },
+            },
+            include: {
+              course: true,
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+          },
+        },
+      });
+
+      if (!student) {
+        throw new Error("Student not found");
+      }
+
+      return {
+        student: {
+          id: student.id,
+          fullName: student.fullName,
+          passport: student.passport,
+        },
+        certificates: student.courses.map((sc) => ({
+          id: sc.id,
+          courseName: sc.course.name,
+          certificateNumber: sc.certificateNumber,
+          certificateUrl: sc.certificateUrl,
+          examResult: sc.examResult,
+          createdAt: sc.createdAt,
+        })),
+      };
+    }),
 });
 
 export type StudentRouter = typeof studentRouter;

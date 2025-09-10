@@ -1,8 +1,8 @@
 import { LoginDialog } from './Dialogs/LoginDialog'
 import { ModeToggle } from './mode-toogle'
-import { Link } from '@tanstack/react-router'
 import UserDropdown from './UserDropdown'
 import { authStore } from '@/stores/auth.store'
+import CertificateSearchDialog from './Dialogs/CertificateSearchDialog'
 
 export default function Header() {
   return (
@@ -80,12 +80,7 @@ export default function Header() {
           </a>
           {authStore.state.isAuth && (
             <>
-              <Link
-                to="/students"
-                className="border px-3 rounded-lg bg-transparent text-xl pb-2 pt-1 tracking-wide cursor-pointer dark:text-black dark:border-black text-white border-white hover:scale-105 active:scale-95"
-              >
-                Tinglovchilar
-              </Link>
+              <CertificateSearchDialog />
               <UserDropdown />
             </>
           )}
