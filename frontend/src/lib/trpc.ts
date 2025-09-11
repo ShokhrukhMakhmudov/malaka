@@ -1,3 +1,3 @@
 import { createTRPCReact } from '@trpc/react-query'
 
-const trpc = createTRPCReact()
+export const trpc = createTRPCReact()

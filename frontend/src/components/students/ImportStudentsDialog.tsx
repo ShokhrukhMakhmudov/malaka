@@ -58,8 +58,9 @@ export default function ImportStudentsDialog({
     () => new Date().toISOString().split('T')[0],
   )
   const [message, setMessage] = useState<string>(
-    'Ichki ishlar vazirligi Malaka oshirish institutida jami 144 soatga \n mo‘ljallangan ofitserlik lavozimlariga tayinlash uchun kunduzgi \n qayta tayyorlash kursini muvaffaqiyatli tamomladi.',
+    '2025-yilning 4-avgust kunidan 19-avgust kuniga qadar \n Ichki ishlar vazirligi Malaka oshirish institutida',
   )
+  const [additionalMessage, setAdditionalMessage] = useState<string>('')
 
   const { courses } = useCourses()
 
@@ -372,6 +373,7 @@ export default function ImportStudentsDialog({
             certificateData: {
               message,
               date,
+              additionalMessage,
             },
           }),
         })
@@ -716,7 +718,19 @@ export default function ImportStudentsDialog({
                     <textarea
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
+                      rows={4}
                       className="w-full h-32 p-2 border rounded"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Qo'shimcha matn
+                    </label>
+                    <textarea
+                      value={additionalMessage}
+                      onChange={(e) => setAdditionalMessage(e.target.value)}
+                      className="w-full p-2 border rounded"
+                      rows={3}
                     />
                   </div>
 

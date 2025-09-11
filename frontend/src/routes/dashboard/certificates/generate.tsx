@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
-import { format, parseISO, set } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import {
   Table,
   TableBody,
@@ -14,15 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useStudentCourses } from '@/hooks/useStudentCourses'
 import { toast } from 'sonner'
-import {
-  Check,
-  CheckCircle,
-  CircleCheckBig,
-  Clock,
-  Loader,
-  X,
-  XCircle,
-} from 'lucide-react'
+import { Check, CircleCheckBig, X, XCircle } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -34,6 +26,8 @@ import {
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { baseUrl } from '@/lib/api'
+import type { CheckedState } from '@radix-ui/react-checkbox'
+
 export const Route = createFileRoute('/dashboard/certificates/generate')({
   component: GenerateCertificatesPage,
 })
@@ -54,8 +48,9 @@ function GenerateCertificatesPage() {
   //   }
   // }>({})
   const [message, setMessage] = useState(
-    'Ichki ishlar vazirligi Malaka oshirish institutida jami 144 soatga \n mo‘ljallangan ofitserlik lavozimlariga tayinlash uchun kunduzgi \n qayta tayyorlash kursini muvaffaqiyatli tamomladi.',
+    '2025-yilning 4-avgust kunidan 19-avgust kuniga qadar \n Ichki ishlar vazirligi Malaka oshirish institutida',
   )
+  const [additionalMessage, setAdditionalMessage] = useState('')
   const [date, setDate] = useState<string>(
     () => new Date().toISOString().split('T')[0],
   )
@@ -86,15 +81,15 @@ function GenerateCertificatesPage() {
   }
 
   // Выбор/снятие всех курсов на странице
-  const toggleSelectAll = () => {
-    if (selectedCourses.length === studentCourses.length) {
-      setSelectedCourses([])
-    } else {
+  const toggleSelectAll = (state: CheckedState) => {
+    if (state) {
       setSelectedCourses(
         studentCourses
           .filter((course) => course.examResult)
           .map((course) => course.id),
       )
+    } else {
+      setSelectedCourses([])
     }
   }
 
@@ -145,6 +140,7 @@ function GenerateCertificatesPage() {
             body: JSON.stringify({
               studentCourseId: courseId,
               message,
+              additionalMessage,
               date,
             }),
           })
@@ -280,7 +276,20 @@ function GenerateCertificatesPage() {
                   <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    className="w-full h-32 p-2 border rounded"
+                    className="w-full p-2 border rounded"
+                    rows={4}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Qo'shimcha matn
+                  </label>
+                  <textarea
+                    value={additionalMessage}
+                    onChange={(e) => setAdditionalMessage(e.target.value)}
+                    className="w-full p-2 border rounded"
+                    rows={3}
                   />
                 </div>
 
@@ -365,7 +374,9 @@ function GenerateCertificatesPage() {
                   <Checkbox
                     checked={
                       studentCourses.length > 0 &&
-                      selectedCourses.length === studentCourses.length
+                      selectedCourses.length ===
+                        studentCourses.filter((course) => course.examResult)
+                          .length
                     }
                     onCheckedChange={toggleSelectAll}
                     disabled={isLoading || studentCourses.length === 0}

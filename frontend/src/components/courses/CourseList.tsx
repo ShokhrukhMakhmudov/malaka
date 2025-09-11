@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -7,7 +6,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Pencil, Trash2 } from 'lucide-react'
 import { useCourses } from '@/hooks/useCourses'
 import CreateCourseDialog from './CreateCourseDialog'
 import EditCourseDialog from './EditCourseDialog'

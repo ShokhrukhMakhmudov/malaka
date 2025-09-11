@@ -1,7 +1,6 @@
 // src/server/routers/dashboard.ts
 import { router, protectedProcedure, publicProcedure } from "../trpc";
 import prisma from "../prisma";
-import { z } from "zod";
 
 export const dashboardRouter = router({
   getStudentCount: publicProcedure.query(async () => {

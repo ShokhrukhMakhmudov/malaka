@@ -12,11 +12,22 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { CircleCheckBig, Trash2, XCircle } from 'lucide-react'
-import type { Course } from '@malaka/backend/src/generated/prisma/client'
 import { useCourses } from '@/hooks/useCourses'
 import { toast } from 'sonner'
 
-export default function DeleteCourseDialog({ course }: { course: Course }) {
+interface DeleteCourseDialogProps {
+  course: {
+    id: string
+    name: string
+    prefix: string
+    createdAt: string
+    updatedAt: string
+  }
+}
+
+export default function DeleteCourseDialog({
+  course,
+}: DeleteCourseDialogProps) {
   const [open, setOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const { deleteCourse } = useCourses()

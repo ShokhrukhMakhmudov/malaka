@@ -12,9 +12,17 @@ import { Input } from '@/components/ui/input'
 import { useCourses } from '@/hooks/useCourses'
 import { toast } from 'sonner'
 import { CircleCheckBig, Pencil, XCircle } from 'lucide-react'
-import type { Course } from '@malaka/backend/src/generated/prisma/client'
 
-export default function EditCourseDialog({ course }: { course: Course }) {
+interface EditCourseDialogProps {
+  course: {
+    id: string
+    name: string
+    prefix: string
+    createdAt: string
+    updatedAt: string
+  }
+}
+export default function EditCourseDialog({ course }: EditCourseDialogProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(course.name)
   const [prefix, setPrefix] = useState(course.prefix)

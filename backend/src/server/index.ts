@@ -229,9 +229,16 @@ const TEMPLATE_COORDINATES: {
   qrCode: { x: 50, y: 30, size: 105 },
 };
 
+// Хелпер для разбивки и очистки строк
+const splitAndClean = (text: string) =>
+  text
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
 app.post("/certificate/generate", async (req, res) => {
   try {
-    const { studentCourseId, message, date } = req.body;
+    const { studentCourseId, message, date, additionalMessage } = req.body;
 
     // Получаем данные о курсе студента
     const studentCourse = await prisma.studentCourse.findUnique({
@@ -391,30 +398,26 @@ app.post("/certificate/generate", async (req, res) => {
     );
 
     // Описание
-    let boldIndex: number | null = null;
-    const messageLines = message
-      .split("\n")
-      .filter((line: string, index: number) => {
-        if (line.trim() === "") boldIndex = index;
-        return line;
-      });
-    messageLines.forEach((line: string, index: number) => {
-      if (boldIndex && index >= boldIndex) {
-        addText(
-          line,
-          TEMPLATE_COORDINATES.description.x,
-          TEMPLATE_COORDINATES.description.y - 30 * index,
-          16,
-          fontBold
-        );
-      } else {
-        addText(
-          line,
-          TEMPLATE_COORDINATES.description.x,
-          TEMPLATE_COORDINATES.description.y - 30 * index,
-          16
-        );
-      }
+
+    // Разбиваем и фильтруем основное и дополнительное сообщение
+    const mainLines = splitAndClean(message);
+    const additionalLines = splitAndClean(additionalMessage);
+
+    const messageLines = [...mainLines, ...additionalLines];
+
+    // Индекс, начиная с которого текст должен быть жирным
+    const boldStartIndex = mainLines.length;
+
+    messageLines.forEach((line, index) => {
+      const font = index >= boldStartIndex ? fontBold : fontReg;
+
+      addText(
+        line,
+        TEMPLATE_COORDINATES.description.x,
+        TEMPLATE_COORDINATES.description.y - 30 * index,
+        16,
+        font
+      );
     });
 
     // Дата выдачи
@@ -541,6 +544,7 @@ app.post("/api/student", async (req, res) => {
         studentCourseId: studentCourse.id,
         message:
           certificateData.message || "Kursni muvaffaqiyatli tamomlagani uchun",
+        additionalMessage: certificateData.additionalMessage,
         date: certificateData.date || new Date().toISOString().split("T")[0],
       });
     }
@@ -564,10 +568,12 @@ app.post("/api/student", async (req, res) => {
 async function generateCertificate({
   studentCourseId,
   message,
+  additionalMessage,
   date,
 }: {
   studentCourseId: string;
   message: string;
+  additionalMessage: string;
   date: string;
 }) {
   try {
@@ -714,30 +720,26 @@ async function generateCertificate({
     );
 
     // Описание
-    let boldIndex: number | null = null;
-    const messageLines = message
-      .split("\n")
-      .filter((line: string, index: number) => {
-        if (line.trim() === "") boldIndex = index;
-        return line;
-      });
-    messageLines.forEach((line: string, index: number) => {
-      if (boldIndex && index >= boldIndex) {
-        addText(
-          line,
-          TEMPLATE_COORDINATES.description.x,
-          TEMPLATE_COORDINATES.description.y - 30 * index,
-          16,
-          fontBold
-        );
-      } else {
-        addText(
-          line,
-          TEMPLATE_COORDINATES.description.x,
-          TEMPLATE_COORDINATES.description.y - 30 * index,
-          16
-        );
-      }
+
+    // Разбиваем и фильтруем основное и дополнительное сообщение
+    const mainLines = splitAndClean(message);
+    const additionalLines = splitAndClean(additionalMessage);
+
+    const messageLines = [...mainLines, ...additionalLines];
+
+    // Индекс, начиная с которого текст должен быть жирным
+    const boldStartIndex = mainLines.length;
+
+    messageLines.forEach((line, index) => {
+      const font = index >= boldStartIndex ? fontBold : fontReg;
+
+      addText(
+        line,
+        TEMPLATE_COORDINATES.description.x,
+        TEMPLATE_COORDINATES.description.y - 30 * index,
+        16,
+        font
+      );
     });
 
     // Дата выдачи
