@@ -204,6 +204,74 @@ export const studentRouter = router({
         })),
       };
     }),
+
+  getCertificatesByPassportOrName: protectedProcedure
+    .input(
+      z.object({
+        passport: z.string().optional(),
+        fullName: z.string().optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      const { passport, fullName } = input;
+
+      // Проверяем, что хотя бы один параметр предоставлен
+      if (!passport && !fullName) {
+        throw new Error("Provide either passport or fullName");
+      }
+
+      // Строим условие для поиска
+      const where: any = {};
+
+      if (passport) {
+        where.passport = passport;
+      }
+
+      if (fullName) {
+        where.fullName = {
+          contains: fullName,
+          mode: "insensitive" as const,
+        };
+      }
+
+      const student = await prisma.student.findFirst({
+        where,
+        include: {
+          courses: {
+            where: {
+              certificateNumber: { not: null },
+              certificateUrl: { not: null },
+            },
+            include: {
+              course: true,
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+          },
+        },
+      });
+
+      if (!student) {
+        throw new Error("Student not found");
+      }
+
+      return {
+        student: {
+          id: student.id,
+          fullName: student.fullName,
+          passport: student.passport,
+        },
+        certificates: student.courses.map((sc) => ({
+          id: sc.id,
+          courseName: sc.course.name,
+          certificateNumber: sc.certificateNumber,
+          certificateUrl: sc.certificateUrl,
+          examResult: sc.examResult,
+          createdAt: sc.createdAt,
+        })),
+      };
+    }),
 });
 
 export type StudentRouter = typeof studentRouter;

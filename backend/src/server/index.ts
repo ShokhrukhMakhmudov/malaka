@@ -373,7 +373,8 @@ app.post("/certificate/generate", async (req, res) => {
 
     // Название курса
     addText(
-      `${studentCourse.course.name} haqida`,
+      // `${studentCourse.course.name} haqida`,
+      `Malaka oshirish haqida`,
       TEMPLATE_COORDINATES.courseName.x,
       TEMPLATE_COORDINATES.courseName.y,
       18
@@ -695,7 +696,8 @@ async function generateCertificate({
 
     // Название курса
     addText(
-      `${studentCourse.course.name} haqida`,
+      // `${studentCourse.course.name} haqida`,
+      `Malaka oshirish haqida`,
       TEMPLATE_COORDINATES.courseName.x,
       TEMPLATE_COORDINATES.courseName.y,
       18

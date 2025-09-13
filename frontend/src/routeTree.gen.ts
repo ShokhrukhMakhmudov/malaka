@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StudentsRouteImport } from './routes/students'
+import { Route as IndexcopyRouteImport } from './routes/index copy'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
@@ -22,6 +23,11 @@ import { Route as DashboardCertificatesGenerateRouteImport } from './routes/dash
 const StudentsRoute = StudentsRouteImport.update({
   id: '/students',
   path: '/students',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexcopyRoute = IndexcopyRouteImport.update({
+  id: '/index copy',
+  path: '/index copy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
@@ -69,6 +75,7 @@ const DashboardCertificatesGenerateRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/index copy': typeof IndexcopyRoute
   '/students': typeof StudentsRoute
   '/dashboard/students': typeof DashboardStudentsRoute
   '/dashboard/users': typeof DashboardUsersRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/index copy': typeof IndexcopyRoute
   '/students': typeof StudentsRoute
   '/dashboard/students': typeof DashboardStudentsRoute
   '/dashboard/users': typeof DashboardUsersRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/index copy': typeof IndexcopyRoute
   '/students': typeof StudentsRoute
   '/dashboard/students': typeof DashboardStudentsRoute
   '/dashboard/users': typeof DashboardUsersRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/dashboard'
+    | '/index copy'
     | '/students'
     | '/dashboard/students'
     | '/dashboard/users'
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/index copy'
     | '/students'
     | '/dashboard/students'
     | '/dashboard/users'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/dashboard'
+    | '/index copy'
     | '/students'
     | '/dashboard/students'
     | '/dashboard/users'
@@ -137,6 +149,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
+  IndexcopyRoute: typeof IndexcopyRoute
   StudentsRoute: typeof StudentsRoute
 }
 
@@ -147,6 +160,13 @@ declare module '@tanstack/react-router' {
       path: '/students'
       fullPath: '/students'
       preLoaderRoute: typeof StudentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/index copy': {
+      id: '/index copy'
+      path: '/index copy'
+      fullPath: '/index copy'
+      preLoaderRoute: typeof IndexcopyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -233,6 +253,7 @@ const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
+  IndexcopyRoute: IndexcopyRoute,
   StudentsRoute: StudentsRoute,
 }
 export const routeTree = rootRouteImport

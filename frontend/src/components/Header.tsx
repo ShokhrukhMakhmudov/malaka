@@ -2,7 +2,6 @@ import { LoginDialog } from './Dialogs/LoginDialog'
 import { ModeToggle } from './mode-toogle'
 import UserDropdown from './UserDropdown'
 import { authStore } from '@/stores/auth.store'
-import CertificateSearchDialog from './Dialogs/CertificateSearchDialog'
 
 export default function Header() {
   return (
@@ -80,7 +79,6 @@ export default function Header() {
           </a>
           {authStore.state.isAuth && (
             <>
-              <CertificateSearchDialog />
               <UserDropdown />
             </>
           )}
