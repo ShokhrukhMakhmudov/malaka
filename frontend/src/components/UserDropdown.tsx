@@ -5,12 +5,17 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { authStore } from '@/stores/auth.store'
+import { useNavigate } from '@tanstack/react-router'
 
 const UserDropdown = () => {
+  const navigate = useNavigate()
   const handleLogout = () => {
     window.location.reload()
   }
 
+  const handleNavigate = () => {
+    navigate({ to: '/dashboard' })
+  }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -19,6 +24,14 @@ const UserDropdown = () => {
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center" className="w-32 z-[100]">
+        {authStore.state.user.isSuperAdmin && (
+          <DropdownMenuItem
+            onClick={handleNavigate}
+            className="cursor-pointer text-center text-xl focus:bg-blue-50"
+          >
+            Dashboard
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           onClick={handleLogout}
           className="cursor-pointer text-center text-xl text-red-600 focus:text-red-600 focus:bg-red-50"

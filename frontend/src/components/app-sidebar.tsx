@@ -18,12 +18,18 @@ import {
   User2,
   LibraryBig,
   DoorOpen,
+  LayoutDashboard,
 } from 'lucide-react'
 // Menu items.
 const items = [
   {
     title: 'Dashboard',
     url: '/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    title: 'Bosh sahifa',
+    url: '/',
     icon: Home,
   },
   {

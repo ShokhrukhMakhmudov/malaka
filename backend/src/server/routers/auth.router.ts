@@ -2,7 +2,7 @@ import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import prisma from "../prisma";
-import { generateToken } from "../utils/jwt";
+import { generateToken, verifyToken } from "../utils/jwt";
 
 // Определение ролей
 export const Role = z.enum(["READ", "EDIT", "CREATE", "COURSE_MANAGEMENT"]);
@@ -231,6 +231,82 @@ export const authRouter = router({
     return {
       user: ctx.user,
     };
+  }),
+
+  authWithToken: publicProcedure.query(async ({ ctx }) => {
+    const token = ctx.req.headers.authorization?.split(" ")[1];
+
+    console.log(token);
+
+    try {
+      // Проверяем и декодируем токен
+      const decoded = verifyToken(token);
+
+      // Для супер-админа
+      if (decoded.isSuperAdmin) {
+        const admin = await prisma.superAdmin.findUnique({
+          where: { id: decoded.id },
+          select: {
+            id: true,
+            login: true,
+            name: true,
+          },
+        });
+
+        if (!admin) {
+          throw new Error("Super admin not found");
+        }
+        const newToken = generateToken({
+          id: admin.id,
+          login: admin.login,
+          isSuperAdmin: true,
+        });
+
+        return {
+          success: true,
+          token: newToken,
+          user: {
+            ...admin,
+            isSuperAdmin: true,
+          },
+        };
+      }
+
+      // Для обычного пользователя
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: {
+          id: true,
+          login: true,
+          name: true,
+          roles: true,
+        },
+      });
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      const newToken = generateToken({
+        id: user.id,
+        login: user.login,
+        roles: user.roles,
+        isSuperAdmin: true,
+      });
+      return {
+        success: true,
+        token: newToken,
+        user: {
+          ...user,
+          isSuperAdmin: false,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: "Invalid or expired token",
+      };
+    }
   }),
 });
 
