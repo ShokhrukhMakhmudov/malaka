@@ -16,11 +16,9 @@ function MainLayout() {
   }, [])
 
   // Запрос выполняется только если токен есть
-  const { data, isPending } =
-    token &&
-    (trpc.auth.authWithToken.useQuery(undefined, {
-      enabled: !!token, // включаем запрос только если токен не пустой
-    }) as any)
+  const { data, isPending } = trpc.auth.authWithToken.useQuery(undefined, {
+    enabled: !!token, // включаем запрос только если токен не пустой
+  }) as any
 
   if (data?.success && data.token) {
     localStorage.setItem('token', data.token)
@@ -37,7 +35,7 @@ function MainLayout() {
     }))
   }
 
-  if (isPending) {
+  if (isPending && token) {
     return (
       <div className="flex items-center justify-center h-screen">
         <svg
