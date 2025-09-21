@@ -23,15 +23,11 @@ import {
 // Menu items.
 const items = [
   {
-    title: 'Dashboard',
-    url: '/dashboard',
-    icon: LayoutDashboard,
-  },
-  {
     title: 'Bosh sahifa',
     url: '/',
     icon: Home,
   },
+
   {
     title: 'Tinglovchilar',
     url: '/dashboard/students',
@@ -43,7 +39,7 @@ const items = [
     icon: GraduationCap,
   },
   {
-    title: 'Kurslar',
+    title: "O'quv kurslarni tahrirlash",
     url: '/dashboard/courses',
     icon: LibraryBig,
   },
@@ -51,6 +47,16 @@ const items = [
     title: 'Imtihon natijalari',
     url: '/dashboard/courses/results',
     icon: BookText,
+  },
+  {
+    title: 'Hisobotlar va statistika',
+    url: '/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Foydalanuvchi qo'shish",
+    url: '/dashboard/users',
+    icon: User2,
   },
 ]
 export function AppSidebar() {
@@ -102,29 +108,6 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               ))}
 
-              <SidebarMenuItem key={'users'}>
-                <SidebarMenuButton
-                  asChild
-                  size={'lg'}
-                  className="text-2xl "
-                  isActive={state === '/dashboard/users'}
-                >
-                  <Link
-                    to={'/dashboard/users'}
-                    className="gap-3 justify-stretch"
-                  >
-                    <User2
-                      style={{
-                        width: '24px',
-                        height: '24px',
-                        marginTop: '1px',
-                      }}
-                    />
-                    <span>Foydalanuvchilar</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
               <SidebarMenuItem key={'exit'}>
                 <SidebarMenuButton asChild size={'lg'} className="text-2xl ">
                   <Link
@@ -149,7 +132,7 @@ export function AppSidebar() {
                         marginTop: '1px',
                       }}
                     />
-                    <span>Chiqish</span>
+                    <span>Tizimdan chiqish</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

@@ -236,7 +236,7 @@ export const authRouter = router({
   authWithToken: publicProcedure.query(async ({ ctx }) => {
     const token = ctx.req.headers.authorization?.split(" ")[1];
 
-    console.log(token);
+    console.log("Server token: ", token);
 
     try {
       // Проверяем и декодируем токен

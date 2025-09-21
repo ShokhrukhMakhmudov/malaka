@@ -23,18 +23,18 @@ const UserDropdown = () => {
           {authStore.state?.user.name}
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" className="w-32 z-[100]">
+      <DropdownMenuContent align="center" className="w-48 z-[100] p-2">
         {authStore.state.user.isSuperAdmin && (
           <DropdownMenuItem
             onClick={handleNavigate}
-            className="cursor-pointer text-center text-xl focus:bg-blue-50"
+            className="cursor-pointer text-xl focus:bg-blue-50"
           >
-            Dashboard
+            Boshqaruv panel
           </DropdownMenuItem>
         )}
         <DropdownMenuItem
           onClick={handleLogout}
-          className="cursor-pointer text-center text-xl text-red-600 focus:text-red-600 focus:bg-red-50"
+          className="cursor-pointer text-xl text-red-600 focus:text-red-600 focus:bg-red-50"
         >
           Chiqish
         </DropdownMenuItem>

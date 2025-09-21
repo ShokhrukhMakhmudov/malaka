@@ -1,14 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { trpc } from '@/utils/trpc'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   BarChart,
@@ -20,8 +12,9 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
-import { Users, BookOpen, CheckCircle, Check, X } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { Users, BookOpen, CheckCircle } from 'lucide-react'
+import DownloadReportButton from '@/components/DownloadReport'
+// import { Badge } from '@/components/ui/badge'
 
 export const Route = createFileRoute('/dashboard/')({
   component: DashboardPage,
@@ -31,24 +24,21 @@ export default function DashboardPage() {
   // Запросы данных
   const { data: studentCount, isLoading: isCountLoading } =
     trpc.dashboard.getStudentCount.useQuery()
-  const { data: courseStats, isLoading: isStatsLoading } =
-    trpc.dashboard.getCourseStats.useQuery()
-  const { data: recentStudents, isLoading: isRecentLoading } =
-    trpc.dashboard.getRecentStudents.useQuery()
+  const { data: yearlyStatsData, isLoading: isYearlyStatsLoading } =
+    trpc.dashboard.getCourseYearlyStats.useQuery()
+  // const { data: recentStudents, isLoading: isRecentLoading } =
+  //   trpc.dashboard.getRecentStudents.useQuery()
   const { data: examStats, isLoading: isExamLoading } =
     trpc.dashboard.getExamStats.useQuery()
 
-  // Подготовка данных для графиков
-  const chartData =
-    courseStats?.map((course) => ({
-      name: course.courseName,
-      Tinglovchilar: course.totalStudents,
-      "Imtihondan o'tganlar": course.passedStudents,
-    })) || []
-
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-8">Statistika</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
+          Statistika
+        </h1>
+        <DownloadReportButton />
+      </div>
 
       {/* Карточки с ключевыми метриками */}
       <div className="grid grid-rows-1 lg:grid-cols-3 gap-4 mb-8">
@@ -104,7 +94,7 @@ export default function DashboardPage() {
                 </span>
                 <span>/</span>
                 <span className="text-4xl font-bold">
-                  {studentCount?.totalStudents}
+                  {studentCount?.totalStudentsCourses}
                 </span>
               </div>
             )}
@@ -117,25 +107,52 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         <Card className="col-span-2">
           <CardHeader>
-            <CardTitle>Kurslar bo'yicha statistika</CardTitle>
+            <CardTitle>Kurslar bo'yicha yillik statistika</CardTitle>
           </CardHeader>
           <CardContent>
-            {isStatsLoading ? (
-              <Skeleton className="h-80 w-full" />
-            ) : chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={chartData}>
+            {isYearlyStatsLoading ? (
+              <Skeleton className="h-96 w-full" />
+            ) : yearlyStatsData && yearlyStatsData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart
+                  data={yearlyStatsData}
+                  margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
+                  <XAxis dataKey="courseName" />
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="Tinglovchilar" fill="#989898" />
-                  <Bar dataKey="Imtihondan o'tganlar" fill="#00c951" />
+                  {/* Группировка столбцов по году */}
+                  <Bar
+                    dataKey="previousYear.total"
+                    name="O'tgan yil: Jami"
+                    fill="#8884d8"
+                  />
+                  <Bar
+                    dataKey="previousYear.passed"
+                    name="O'tgan yil: O'tganlar"
+                    fill="#82ca9d"
+                  />
+                  <Bar
+                    dataKey="currentYear.total"
+                    name="Joriy yil: Jami"
+                    fill="#ffc658"
+                  />
+                  <Bar
+                    dataKey="currentYear.passed"
+                    name="Joriy yil: O'tganlar"
+                    fill="#ff7300"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-80 flex items-center justify-center text-gray-500">
+              <div className="h-96 flex items-center justify-center text-gray-500">
                 Ma'lumotlar mavjud emas
               </div>
             )}
@@ -149,7 +166,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {isExamLoading ? (
-              <Skeleton className="h-80 w-full" />
+              <Skeleton className="h-96 w-full" />
             ) : examStats && examStats.length > 0 ? (
               <div className="space-y-4">
                 {examStats.map((stat, index) => (
@@ -168,7 +185,7 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <div className="h-80 flex items-center justify-center text-gray-500">
+              <div className="h-96 flex items-center justify-center text-gray-500">
                 Нет данных для отображения
               </div>
             )}
@@ -177,7 +194,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Таблица последних студентов */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle className="text-xl">Yangi tinglovchilar</CardTitle>
         </CardHeader>
@@ -254,7 +271,7 @@ export default function DashboardPage() {
             </TableBody>
           </Table>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   )
 }

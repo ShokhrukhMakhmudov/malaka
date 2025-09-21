@@ -21,13 +21,16 @@ export default function CertificateSearchPage() {
 
   // Расчет общей статистики
   const totalStudents = studentCountQuery.data?.totalStudents || 0
+  const totalStudentsCourses = studentCountQuery.data?.totalStudentsCourses || 0
   const totalCourses = studentCountQuery.data?.totalCourses || 0
   const activeCourses = studentCountQuery.data?.activeCourses || 0
   const passedExams = studentCountQuery.data?.passedExams || 0
 
   // Расчет процента успешной сдачи экзаменов
   const passRate =
-    totalStudents > 0 ? Math.round((passedExams / totalStudents) * 100) : 0
+    totalStudents > 0
+      ? Math.round((passedExams / totalStudentsCourses) * 100)
+      : 0
 
   const [searchType, setSearchType] = useState<'passport' | 'fullName'>(
     'fullName',

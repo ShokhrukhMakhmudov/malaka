@@ -110,7 +110,7 @@ const CourseCard = ({ course }: { course: Omit<CourseStats, 'prefix'> }) => {
 
       <div className="px-6 pb-4 ">
         <div className="text-sm flex items-center justify-between border-white border-1 rounded-md py-1 px-2">
-          <span className="text-white/70">Muvaffaqiyatli:</span>
+          <span className="text-white/70">Sertifikatga ega, bo'lganlar:</span>
           <span className="font-medium text-white text-lg">
             {course.passedStudents}
           </span>
