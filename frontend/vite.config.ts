@@ -8,6 +8,9 @@ import { resolve } from 'node:path'
 // https://vitejs.dev/config/
 export default defineConfig({
   server: {
+    allowedHosts: ['test.andijonpmm.uz'],
+    host: '0.0.0.0',
+    port: 4000,
     proxy: {
       '/api': 'http://localhost:5000',
     },
@@ -17,7 +20,7 @@ export default defineConfig({
     viteReact(),
     tailwindcss(),
   ],
-   test: {
+  test: {
     globals: true,
     environment: 'jsdom',
   },
