@@ -193,3 +193,5 @@ export const reportsRouter = router({
       return base64;
     }),
 });
+
+export type ReportsRouter = typeof reportsRouter;
