@@ -9,16 +9,18 @@ function MainLayout() {
 
   // Считываем токен один раз при монтировании
   useEffect(() => {
-    setToken(localStorage.getItem('token'))
+    const storageToken = localStorage.getItem('token')
+    if (storageToken) {
+      setToken(storageToken)
+    }
   }, [])
 
-  console.log('Client token:', token)
-
   // Запрос выполняется только если токен есть
-  const { data, isPending } = trpc.auth.authWithToken.useQuery(undefined, {
-    enabled: !!token, // включаем запрос только если токен не пустой
-  }) as any
-  console.log('Data:', data)
+  const { data, isPending } =
+    token &&
+    (trpc.auth.authWithToken.useQuery(undefined, {
+      enabled: !!token, // включаем запрос только если токен не пустой
+    }) as any)
 
   if (data?.success && data.token) {
     localStorage.setItem('token', data.token)
