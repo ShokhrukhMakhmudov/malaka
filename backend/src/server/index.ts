@@ -110,9 +110,9 @@ app.post("/api/login", express.json(), async (req, res) => {
 });
 app.post("/api/students/import", async (req, res) => {
   try {
-    const { courseId, students } = req.body;
+    const { courseId, students, department } = req.body;
 
-    if (!courseId || !students || students.length === 0) {
+    if (!courseId || !students || !department || students.length === 0) {
       return res.status(400).json({ error: "Invalid data" });
     }
 
@@ -162,6 +162,7 @@ app.post("/api/students/import", async (req, res) => {
             data: {
               studentId: existingStudent.id,
               courseId,
+              department,
               examResult: student.examResult || false,
               certificateNumber: null,
               certificateUrl: null,
@@ -180,6 +181,7 @@ app.post("/api/students/import", async (req, res) => {
               courses: {
                 create: {
                   courseId,
+                  department,
                   examResult: student.examResult || false,
                   certificateNumber: null,
                   certificateUrl: null,
@@ -533,6 +535,7 @@ app.post("/api/student", async (req, res) => {
         data: {
           studentId: studentRecord.id,
           courseId: courseId,
+          department: student.department,
           examResult: student.examResult || false,
         },
       });

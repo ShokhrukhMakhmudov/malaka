@@ -20,25 +20,94 @@ import ImportStudentsDialog from './ImportStudentsDialog.tsx'
 import { Button } from '../ui/button.tsx'
 import { Link } from '@tanstack/react-router'
 import { authStore } from '@/stores/auth.store.ts'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select.tsx'
+import { regions } from '@/utils/data.ts'
+import { useCourses } from '@/hooks/useCourses.ts'
+// import { DatePicker } from '../DatePicker/index.tsx'
 
 export default function StudentList() {
   const [search, setSearch] = useState('')
-  const { students, isLoading, refetch } = useStudents({ search })
+  const [courseId, setCourseId] = useState('')
+  const [department, setDepartment] = useState('')
+  // const [date, setDate] = useState<Date | undefined>(undefined)
+  const { courses } = useCourses()
+  const { students, isLoading, refetch } = useStudents({
+    search,
+    // date,
+    courseId,
+    department,
+  })
   const isAdmin = authStore.state.user?.isSuperAdmin
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value)
-  }
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <div className="w-full sm:w-auto">
-          <Input
-            placeholder="Qidirish..."
-            value={search}
-            size={isAdmin ? 20 : 48}
-            onChange={handleSearch}
-          />
+          <div className="flex items-center gap-4">
+            <Input
+              placeholder="Qidirish..."
+              value={search}
+              size={isAdmin ? 20 : 48}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+
+            <Select
+              value={courseId}
+              onValueChange={(value) =>
+                value === 'all' ? setCourseId('') : setCourseId(value)
+              }
+              required
+            >
+              <SelectTrigger size="lg" className="text-lg">
+                <SelectValue placeholder="Kursni tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem className="text-lg" key={'all'} value={'all'}>
+                  Barchasi
+                </SelectItem>
+                {courses &&
+                  courses.map((course) => (
+                    <SelectItem
+                      className="text-lg"
+                      key={course.id}
+                      value={course.id}
+                    >
+                      {course.name} ({course.prefix})
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={department}
+              onValueChange={(value) =>
+                value === 'all' ? setDepartment('') : setDepartment(value)
+              }
+              required
+            >
+              <SelectTrigger size="lg" className="text-lg">
+                <SelectValue placeholder="Bo'linmani tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem className="text-lg" key={'all'} value={'all'}>
+                  Barchasi
+                </SelectItem>
+                {regions.map((item) => (
+                  <SelectItem className="text-lg" key={item} value={item}>
+                    {item}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* <DatePicker date={date} setDate={setDate} /> */}
+          </div>
         </div>
         {isAdmin && (
           <div className="flex gap-2 w-full sm:w-auto">

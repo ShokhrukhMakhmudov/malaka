@@ -80,21 +80,19 @@ export default function DashboardPage() {
 
         <Card className="gap-2">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Imtihon natijalari
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Kursatgichlar</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-row items-center justify-between">
             {isCountLoading ? (
               <Skeleton className="h-8 w-20" />
             ) : (
               <div className="text-4xl font-bold">
-                <span className="text-green-500">
-                  {studentCount?.passedExams}
-                </span>
-                <span>/</span>
                 <span className="text-4xl font-bold">
                   {studentCount?.totalStudentsCourses}
+                </span>
+                <span>/</span>
+                <span className="text-green-500">
+                  {studentCount?.passedExams}
                 </span>
               </div>
             )}

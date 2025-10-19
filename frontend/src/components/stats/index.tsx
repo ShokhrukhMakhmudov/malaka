@@ -88,9 +88,7 @@ const CourseCard = ({ course }: { course: Omit<CourseStats, 'prefix'> }) => {
 
         <div className="mt-4">
           <div className="flex items-center justify-between text-sm mb-1">
-            <span className="text-white/80 drop-shadow-sm">
-              Imtihon natijasi
-            </span>
+            <span className="text-white/80 drop-shadow-sm">Kursatgichlar</span>
             <span className="font-medium text-white drop-shadow-sm">
               {passRate}%
             </span>

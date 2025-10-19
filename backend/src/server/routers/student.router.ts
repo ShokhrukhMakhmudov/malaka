@@ -1,11 +1,11 @@
 import { router, protectedProcedure } from "../trpc";
 import { z } from "zod";
 import prisma from "../prisma";
-
 // Схема для связи студент-курс
 const StudentCourseInput = z.object({
   courseId: z.string().uuid(),
   examResult: z.boolean().optional().default(false),
+  department: z.string(),
   certificateNumber: z.string().optional().nullable(),
   certificateUrl: z.string().optional().nullable(),
 });
@@ -38,6 +38,7 @@ export const studentRouter = router({
             create: courses?.map((course) => ({
               course: { connect: { id: course.courseId } },
               examResult: course.examResult,
+              department: course.department,
               certificateNumber: course.certificateNumber,
               certificateUrl: course.certificateUrl,
             })),
@@ -57,13 +58,29 @@ export const studentRouter = router({
       z
         .object({
           search: z.string().optional(),
+          department: z.string().optional(),
+          courseId: z.string().optional(),
+          date: z.date().optional(),
         })
         .optional()
     )
     .query(async ({ input }) => {
-      const search = input?.search || "";
+      const { search, department, courseId } = input || {};
+
       return prisma.student.findMany({
         where: {
+          AND: [
+            {
+              courses: {
+                some: {
+                  course: {
+                    id: courseId,
+                  },
+                  department,
+                },
+              },
+            },
+          ],
           OR: [
             { fullName: { contains: search, mode: "insensitive" } },
             { passport: { contains: search, mode: "insensitive" } },
@@ -96,6 +113,7 @@ export const studentRouter = router({
                 create: courses?.map((course) => ({
                   course: { connect: { id: course.courseId } },
                   examResult: course.examResult,
+                  department: course.department,
                   certificateNumber: course.certificateNumber,
                   certificateUrl: course.certificateUrl,
                 })),
@@ -126,6 +144,7 @@ export const studentRouter = router({
               courses?.map((course) => ({
                 courseId: course.courseId,
                 examResult: course.examResult,
+                department: course.department,
                 certificateNumber: course.certificateNumber,
                 certificateUrl: course.certificateUrl,
               })) || [],

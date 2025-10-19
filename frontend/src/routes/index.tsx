@@ -23,7 +23,6 @@ export default function CertificateSearchPage() {
   const totalStudents = studentCountQuery.data?.totalStudents || 0
   const totalStudentsCourses = studentCountQuery.data?.totalStudentsCourses || 0
   const totalCourses = studentCountQuery.data?.totalCourses || 0
-  const activeCourses = studentCountQuery.data?.activeCourses || 0
   const passedExams = studentCountQuery.data?.passedExams || 0
 
   // Расчет процента успешной сдачи экзаменов
@@ -117,8 +116,8 @@ export default function CertificateSearchPage() {
             />
 
             <StatCard
-              title="Faol o'quv kurslar"
-              value={activeCourses}
+              title="Sertifikatga ega bo'lganlar"
+              value={passedExams}
               icon={
                 <svg
                   className="w-8 h-8 text-purple-300"
@@ -138,7 +137,7 @@ export default function CertificateSearchPage() {
             />
 
             <StatCard
-              title="Imtihon natijasi"
+              title="Kursatgichlar"
               value={`${passRate}%`}
               icon={
                 <svg
@@ -236,9 +235,9 @@ export default function CertificateSearchPage() {
 
           {error && (
             <Card className="mb-8 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
-              <CardContent className="pt-6">
-                <div className="text-red-700 dark:text-red-300 text-center">
-                  {'Sertifikat topilmadi!'}
+              <CardContent>
+                <div className="text-red-700 dark:text-red-300 text-center text-lg">
+                  {'Tinglovchi topilmadi!'}
                 </div>
               </CardContent>
             </Card>
@@ -317,7 +316,7 @@ export default function CertificateSearchPage() {
                   ) : (
                     <div className="text-center py-8 text-gray-500">
                       <FileText className="h-12 w-12 mx-auto text-gray-300 mb-2" />
-                      <p>Sertifikat topilmadi</p>
+                      <p>Imtihondan o'tolmagan</p>
                     </div>
                   )}
                 </CardContent>

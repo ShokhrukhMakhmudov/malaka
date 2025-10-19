@@ -17,7 +17,7 @@ datasource db {
 model SuperAdmin {
   id        String   @id @default(uuid())
   login     String   @unique
-  password  String   // Будем хранить хешированный пароль
+  password  String // Будем хранить хешированный пароль
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -39,33 +39,34 @@ model User {
   login     String   @unique
   password  String
   name      String?
-  roles     Role[]   // Изменяем на массив ролей
+  roles     Role[] // Изменяем на массив ролей
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
   @@map("users")
 }
 
 model Student {
-  id        String         @id @default(uuid())
+  id        String          @id @default(uuid())
   fullName  String
-  passport  String         @unique
+  passport  String          @unique
   rank      String
   phone     String?
   courses   StudentCourse[]
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 
   @@index([fullName])
   @@map("students")
 }
 
 model Course {
-  id        String         @id @default(uuid())
-  name      String         @unique
-  prefix    String         @db.VarChar(10)
+  id        String          @id @default(uuid())
+  name      String          @unique
+  prefix    String          @db.VarChar(10)
   students  StudentCourse[]
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 
   @@map("courses")
 }
@@ -74,6 +75,7 @@ model StudentCourse {
   id                String   @id @default(uuid())
   studentId         String
   courseId          String
+  department        String
   examResult        Boolean  @default(false)
   certificateNumber String?
   certificateUrl    String?

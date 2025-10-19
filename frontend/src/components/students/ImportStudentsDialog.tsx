@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
 import { baseUrl } from '@/lib/api'
+import { regions } from '@/utils/data'
 
 export default function ImportStudentsDialog({
   onSuccess,
@@ -45,6 +46,7 @@ export default function ImportStudentsDialog({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(false)
   const [courseId, setCourseId] = useState('')
+  const [department, setDepartment] = useState('')
   const [step, setStep] = useState(1) // 1: Выбор файла, 2: Предпросмотр
   const [studentsData, setStudentsData] = useState<any[]>([])
   const [selectedStudents, setSelectedStudents] = useState<Set<number>>(
@@ -154,7 +156,7 @@ export default function ImportStudentsDialog({
   // Обработчик отправки формы
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!file || !courseId || selectedStudents.size === 0) return
+    if (!file || !courseId || !department || selectedStudents.size === 0) return
 
     setIsSubmitting(true)
 
@@ -169,6 +171,7 @@ export default function ImportStudentsDialog({
           phone: student.phone,
           examResult: selectedStudents.has(index),
         })),
+        department,
       }
 
       const response = await fetch('/api/students/import', {
@@ -465,7 +468,7 @@ export default function ImportStudentsDialog({
       </DialogTrigger>
       <DialogContent className="lg:max-w-5xl w-full">
         <DialogHeader>
-          <DialogTitle>Tinglovchilarni ro'yhatini yuklash</DialogTitle>
+          <DialogTitle>Tinglovchilar ro'yxatini yuklash</DialogTitle>
         </DialogHeader>
 
         <AnimatePresence mode="wait">
@@ -480,27 +483,48 @@ export default function ImportStudentsDialog({
             >
               <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
                 <div>
-                  <div className="mb-4">
-                    <Label className="mb-2">Kurs *</Label>
-                    <Select
-                      value={courseId}
-                      onValueChange={(value) => setCourseId(value)}
-                      disabled={isLoadingData}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Kursni tanlang" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {courses &&
-                          courses.map((course) => (
-                            <SelectItem key={course.id} value={course.id}>
-                              {course.name} ({course.prefix})
+                  <div className="flex items-center gap-8 mb-4">
+                    <div>
+                      <Label className="mb-2">Kurs *</Label>
+                      <Select
+                        value={courseId}
+                        onValueChange={(value) => setCourseId(value)}
+                        disabled={isLoadingData}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Kursni tanlang" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {courses &&
+                            courses.map((course) => (
+                              <SelectItem key={course.id} value={course.id}>
+                                {course.name} ({course.prefix})
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label className="mb-2">Hududiy boʻlinma *</Label>
+                      <Select
+                        value={department}
+                        onValueChange={(value) => setDepartment(value)}
+                        disabled={isLoadingData}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Bo'linmani tanlang" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {regions.map((item) => (
+                            <SelectItem key={item} value={item}>
+                              {item}
                             </SelectItem>
                           ))}
-                      </SelectContent>
-                    </Select>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-
                   <Label
                     htmlFor="file"
                     className="mb-2 flex flex-col gap-4 items-start"
@@ -588,7 +612,9 @@ export default function ImportStudentsDialog({
                   </Button>
                   <Button
                     type="button"
-                    disabled={!file || !courseId || isLoadingData}
+                    disabled={
+                      !file || !courseId || !department || isLoadingData
+                    }
                     onClick={goToNextStep}
                   >
                     {isLoadingData ? (

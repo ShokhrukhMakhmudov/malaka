@@ -150,7 +150,7 @@ export default function CertificateSearchDialog({
               ) : (
                 <div className="text-center py-6 text-gray-500">
                   <FileText className="h-12 w-12 mx-auto text-gray-300 mb-2" />
-                  <p>Sertifikat topilmadi</p>
+                  <p>Imtihondan o'tolmagan</p>
                 </div>
               )}
 
