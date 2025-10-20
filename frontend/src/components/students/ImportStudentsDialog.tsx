@@ -293,6 +293,7 @@ export default function ImportStudentsDialog({
       // Формируем данные для отправки
       const sendDataForCertificates = {
         courseId,
+        department,
         students: studentsData
           .filter((_, index) => selectedStudents.has(index))
           .map((student) => ({
@@ -307,6 +308,7 @@ export default function ImportStudentsDialog({
       if (studentsData.length !== selectedStudents.size) {
         const sendData = {
           courseId,
+          department,
           students: studentsData
             .filter((_, index) => !selectedStudents.has(index))
             .map((student) => ({
