@@ -488,10 +488,16 @@ app.post("/certificate/generate", async (req, res) => {
 
 app.post("/api/student", async (req, res) => {
   try {
-    const { student, courseId, certificateData } = req.body;
+    const { student, courseId, department, certificateData } = req.body;
 
     // Проверка обязательных полей
-    if (!student || !student.fullName || !student.passport || !courseId) {
+    if (
+      !student ||
+      !student.fullName ||
+      !student.passport ||
+      !courseId ||
+      !department
+    ) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -535,7 +541,7 @@ app.post("/api/student", async (req, res) => {
         data: {
           studentId: studentRecord.id,
           courseId: courseId,
-          department: student.department,
+          department: department,
           examResult: student.examResult || false,
         },
       });

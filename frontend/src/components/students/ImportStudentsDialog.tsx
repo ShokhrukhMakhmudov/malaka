@@ -375,6 +375,7 @@ export default function ImportStudentsDialog({
           body: JSON.stringify({
             student,
             courseId,
+            department,
             certificateData: {
               message,
               date,
