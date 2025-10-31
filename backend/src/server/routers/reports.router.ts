@@ -40,7 +40,7 @@ function sanitizeSheetName(name: string) {
 const DEPARTMENTS = regions;
 
 // Звания из шаблона
-const RANKS = ["podpolkovnik", "mayor", "kapitan", "katta serjannt"];
+const RANKS = ["podpolkovnik", "mayor", "kapitan", "katta serjant"];
 
 export const reportsRouter = router({
   generateReport: protectedProcedure
@@ -86,24 +86,24 @@ export const reportsRouter = router({
       // Инициализируем структуру для всех подразделений
       DEPARTMENTS.forEach((dept) => {
         departmentStats[dept] = {
-          total: { podpolkovnik: 0, mayor: 0, kapitan: 0, "katta serjannt": 0 },
+          total: { podpolkovnik: 0, mayor: 0, kapitan: 0, "katta serjant": 0 },
           participants: {
             podpolkovnik: 0,
             mayor: 0,
             kapitan: 0,
-            "katta serjannt": 0,
+            "katta serjant": 0,
           },
           withCertificate: {
             podpolkovnik: 0,
             mayor: 0,
             kapitan: 0,
-            "katta serjannt": 0,
+            "katta serjant": 0,
           },
           withoutCertificate: {
             podpolkovnik: 0,
             mayor: 0,
             kapitan: 0,
-            "katta serjannt": 0,
+            "katta serjant": 0,
           },
         };
       });
@@ -111,7 +111,7 @@ export const reportsRouter = router({
       // Заполняем статистику
       studentCourses.forEach((sc) => {
         const dept = sc.department;
-        const rank = sc.student.rank.trim().toLocaleLowerCase();
+        const rank = sc.course.name.trim().toLowerCase();
 
         // Пропускаем если подразделение или звание не из нашего списка
         if (!DEPARTMENTS.includes(dept) || !RANKS.includes(rank)) {
@@ -120,17 +120,13 @@ export const reportsRouter = router({
 
         // Общее количество
         departmentStats[dept].total[rank]++;
+        departmentStats[dept].participants[rank]++;
 
-        // Участники учебного сбора (те, кто сдал экзамен)
+        // Участники учебного сбора (те, кто сдал экзамен и не сдал)
         if (sc.examResult) {
-          departmentStats[dept].participants[rank]++;
-
-          // С сертификатом или без
-          if (sc.certificateNumber) {
-            departmentStats[dept].withCertificate[rank]++;
-          } else {
-            departmentStats[dept].withoutCertificate[rank]++;
-          }
+          departmentStats[dept].withCertificate[rank]++;
+        } else {
+          departmentStats[dept].withoutCertificate[rank]++;
         }
       });
 
@@ -183,12 +179,7 @@ export const reportsRouter = router({
       worksheet.getCell("O3").value = "Sertifikatga ega bo'lmaganlar";
 
       // Подзаголовки званий
-      const rankHeaders = [
-        "podpolkovnik",
-        "mayor",
-        "kapitan",
-        "katta serjannt",
-      ];
+      const rankHeaders = ["podpolkovnik", "mayor", "kapitan", "katta serjant"];
       for (let i = 0; i < 4; i++) {
         worksheet.getCell(4, 3 + i).value = rankHeaders[i]; // C4-F4
         worksheet.getCell(4, 7 + i).value = rankHeaders[i]; // G4-J4
@@ -199,24 +190,24 @@ export const reportsRouter = router({
       // Заполняем данные
       let rowIndex = 5;
       let total: any = {
-        total: { podpolkovnik: 0, mayor: 0, kapitan: 0, "katta serjannt": 0 },
+        total: { podpolkovnik: 0, mayor: 0, kapitan: 0, "katta serjant": 0 },
         participants: {
           podpolkovnik: 0,
           mayor: 0,
           kapitan: 0,
-          "katta serjannt": 0,
+          "katta serjant": 0,
         },
         withCertificate: {
           podpolkovnik: 0,
           mayor: 0,
           kapitan: 0,
-          "katta serjannt": 0,
+          "katta serjant": 0,
         },
         withoutCertificate: {
           podpolkovnik: 0,
           mayor: 0,
           kapitan: 0,
-          "katta serjannt": 0,
+          "katta serjant": 0,
         },
       };
 
@@ -230,7 +221,7 @@ export const reportsRouter = router({
         worksheet.getCell(`C${rowIndex}`).value = stats.total["podpolkovnik"];
         worksheet.getCell(`D${rowIndex}`).value = stats.total["mayor"];
         worksheet.getCell(`E${rowIndex}`).value = stats.total["kapitan"];
-        worksheet.getCell(`F${rowIndex}`).value = stats.total["katta serjannt"];
+        worksheet.getCell(`F${rowIndex}`).value = stats.total["katta serjant"];
 
         // Ўқув йиғинида иштирок этганлар
         worksheet.getCell(`G${rowIndex}`).value =
@@ -238,7 +229,7 @@ export const reportsRouter = router({
         worksheet.getCell(`H${rowIndex}`).value = stats.participants["mayor"];
         worksheet.getCell(`I${rowIndex}`).value = stats.participants["kapitan"];
         worksheet.getCell(`J${rowIndex}`).value =
-          stats.participants["katta serjannt"];
+          stats.participants["katta serjant"];
 
         // Сертификатга эга бўлганлар
         worksheet.getCell(`K${rowIndex}`).value =
@@ -248,7 +239,7 @@ export const reportsRouter = router({
         worksheet.getCell(`M${rowIndex}`).value =
           stats.withCertificate["kapitan"];
         worksheet.getCell(`N${rowIndex}`).value =
-          stats.withCertificate["katta serjannt"];
+          stats.withCertificate["katta serjant"];
 
         // Сертификатга эга бўлмаганлар
         worksheet.getCell(`O${rowIndex}`).value =
@@ -258,7 +249,7 @@ export const reportsRouter = router({
         worksheet.getCell(`Q${rowIndex}`).value =
           stats.withoutCertificate["kapitan"];
         worksheet.getCell(`R${rowIndex}`).value =
-          stats.withoutCertificate["katta serjannt"];
+          stats.withoutCertificate["katta serjant"];
 
         // Суммируем в общие итоги
         RANKS.forEach((rank) => {
@@ -279,7 +270,7 @@ export const reportsRouter = router({
       worksheet.getCell(`C${rowIndex}`).value = total.total["podpolkovnik"];
       worksheet.getCell(`D${rowIndex}`).value = total.total["mayor"];
       worksheet.getCell(`E${rowIndex}`).value = total.total["kapitan"];
-      worksheet.getCell(`F${rowIndex}`).value = total.total["katta serjannt"];
+      worksheet.getCell(`F${rowIndex}`).value = total.total["katta serjant"];
 
       // Ўқув йиғинида иштирок этганлар - итог
       worksheet.getCell(`G${rowIndex}`).value =
@@ -287,7 +278,7 @@ export const reportsRouter = router({
       worksheet.getCell(`H${rowIndex}`).value = total.participants["mayor"];
       worksheet.getCell(`I${rowIndex}`).value = total.participants["kapitan"];
       worksheet.getCell(`J${rowIndex}`).value =
-        total.participants["katta serjannt"];
+        total.participants["katta serjant"];
 
       // Сертификатга эга бўлганлар - итог
       worksheet.getCell(`K${rowIndex}`).value =
@@ -296,7 +287,7 @@ export const reportsRouter = router({
       worksheet.getCell(`M${rowIndex}`).value =
         total.withCertificate["kapitan"];
       worksheet.getCell(`N${rowIndex}`).value =
-        total.withCertificate["katta serjannt"];
+        total.withCertificate["katta serjant"];
 
       // Сертификатга эга бўлмаганлар - итог
       worksheet.getCell(`O${rowIndex}`).value =
@@ -306,7 +297,7 @@ export const reportsRouter = router({
       worksheet.getCell(`Q${rowIndex}`).value =
         total.withoutCertificate["kapitan"];
       worksheet.getCell(`R${rowIndex}`).value =
-        total.withoutCertificate["katta serjannt"];
+        total.withoutCertificate["katta serjant"];
 
       // Форматирование
       // Устанавливаем стили для заголовков
@@ -357,19 +348,19 @@ export const reportsRouter = router({
         { width: 10 }, // C: podpolkovnik (total)
         { width: 10 }, // D: mayor (total)
         { width: 10 }, // E: kapitan (total)
-        { width: 10 }, // F: katta serjannt (total)
+        { width: 10 }, // F: katta serjant (total)
         { width: 10 }, // G: podpolkovnik (participants)
         { width: 10 }, // H: mayor (participants)
         { width: 10 }, // I: kapitan (participants)
-        { width: 10 }, // J: katta serjannt (participants)
+        { width: 10 }, // J: katta serjant (participants)
         { width: 10 }, // K: podpolkovnik (with cert)
         { width: 10 }, // L: mayor (with cert)
         { width: 10 }, // M: kapitan (with cert)
-        { width: 10 }, // N: katta serjannt (with cert)
+        { width: 10 }, // N: katta serjant (with cert)
         { width: 10 }, // O: podpolkovnik (without cert)
         { width: 10 }, // P: mayor (without cert)
         { width: 10 }, // Q: kapitan (without cert)
-        { width: 10 }, // R: katta serjannt (without cert)
+        { width: 10 }, // R: katta serjant (without cert)
       ];
 
       // Генерируем буфер
