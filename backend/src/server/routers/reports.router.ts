@@ -371,6 +371,193 @@ export const reportsRouter = router({
 
       return base64;
     }),
+
+  generateStudentList: protectedProcedure
+    .input(
+      z.object({
+        students: z.array(
+          z.object({
+            id: z.string(),
+            fullName: z.string(),
+            passport: z.string(),
+            rank: z.string(),
+            phone: z.string().nullable(),
+            courses: z.array(
+              z.object({
+                id: z.string(),
+                courseId: z.string(),
+                department: z.string(),
+                createdAt: z.string(),
+                updatedAt: z.string(),
+                certificateNumber: z.string().nullable(),
+                certificateUrl: z.string().nullable(),
+                examResult: z.boolean(),
+                studentId: z.string(),
+                course: z.object({
+                  name: z.string(),
+                  id: z.string(),
+                  createdAt: z.string(),
+                  updatedAt: z.string(),
+                  prefix: z.string(),
+                }),
+              })
+            ),
+            createdAt: z.string(),
+            updatedAt: z.string(),
+          })
+        ),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { students } = input;
+
+      // Группируем студентов по дате и курсу
+      const groupedStudents = students.reduce(
+        (groups, student) => {
+          if (student.courses && student.courses.length > 0) {
+            student.courses.forEach((course) => {
+              // Пропускаем если нет номера сертификата
+              if (!course?.certificateNumber) {
+                return;
+              }
+
+              const courseDate = new Date(course.createdAt);
+              const dateKey = courseDate.toLocaleDateString("ru-RU");
+              const courseName = course.course?.name || "Неизвестный курс";
+
+              // Создаем уникальный ключ для группы: дата + название курса
+              const groupKey = `${dateKey}_${courseName}`;
+
+              if (!course.certificateNumber) return;
+
+              if (!groups[groupKey]) {
+                groups[groupKey] = {
+                  date: dateKey,
+                  courseName: courseName,
+                  students: [],
+                };
+              }
+
+              groups[groupKey].students.push({
+                ...student,
+                course: course,
+              });
+            });
+          }
+          return groups;
+        },
+        {} as Record<
+          string,
+          { date: string; courseName: string; students: any[] }
+        >
+      );
+      // Создаём workbook
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Tinglovchilar ro'yxati");
+
+      // Пустая строка
+      let currentRow = 1;
+
+      // Проходим по всем группам (датам)
+      Object.entries(groupedStudents).forEach(
+        ([groupKey, { date, courseName, students: studentsInGroup }]) => {
+          // Добавляем заголовок группы (как в картинке)
+          worksheet.mergeCells(`A${currentRow}:E${currentRow}`);
+          const groupHeaderCell = worksheet.getCell(`A${currentRow}`);
+          groupHeaderCell.value = `${courseName}  -  ${date}`;
+          groupHeaderCell.font = { bold: true, size: 12 };
+          groupHeaderCell.alignment = {
+            horizontal: "center",
+            vertical: "middle",
+          };
+          groupHeaderCell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFE6E6E6" },
+          };
+
+          currentRow++;
+
+          // Заголовки таблицы
+          const headerRow = worksheet.getRow(currentRow);
+          headerRow.values = [
+            "Qayd raqami",
+            "Familya ism sharifi",
+            "Passport (JSHIR)",
+            "Maxsus unvoni",
+            "Sertifikat raqami",
+          ];
+
+          headerRow.eachCell((cell) => {
+            cell.font = { bold: true };
+            cell.alignment = {
+              horizontal: "center",
+              vertical: "middle",
+              wrapText: true,
+            };
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: "FFD9E1F2" },
+            };
+            cell.border = {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            };
+          });
+
+          currentRow++;
+
+          // Данные студентов в этой группе
+          studentsInGroup.forEach((student, index) => {
+            const row = worksheet.getRow(currentRow);
+            row.values = [
+              `${index + 1}`,
+              `${student.fullName}`,
+              student.passport,
+              student.rank ?? "",
+              student.course?.certificateNumber ?? "",
+            ];
+
+            row.eachCell((cell) => {
+              cell.border = {
+                top: { style: "thin" },
+                left: { style: "thin" },
+                bottom: { style: "thin" },
+                right: { style: "thin" },
+              };
+              cell.alignment = {
+                horizontal: "center",
+                vertical: "middle",
+                wrapText: true,
+              };
+            });
+
+            currentRow++;
+          });
+
+          // Добавляем пустую строку между группами
+          currentRow++;
+        }
+      );
+
+      // Устанавливаем ширину колонок
+      worksheet.columns = [
+        { width: 15 }, // Qayd raqami
+        { width: 35 }, // Familya ism sharifi
+        { width: 25 }, // Passport (JSHIR)
+        { width: 25 }, // Maxsus unvoni
+        { width: 25 }, // Sertifikat raqami
+      ];
+
+      // Генерируем файл
+      const buffer = await workbook.xlsx.writeBuffer();
+      const base64 = Buffer.from(buffer).toString("base64");
+
+      return base64;
+    }),
 });
 
 export type ReportsRouter = typeof reportsRouter;

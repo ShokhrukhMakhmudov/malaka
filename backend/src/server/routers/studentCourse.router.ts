@@ -9,6 +9,27 @@ export const studentCourseRouter = router({
     .input(z.object({ date: z.string() }))
     .query(async ({ input }) => {
       const { date } = input;
+
+      // Если date пустая строка, получаем все курсы без фильтрации
+      if (date === "") {
+        const studentCourses = await prisma.studentCourse.findMany({
+          include: {
+            student: true,
+            course: true,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
+
+        return {
+          studentCourses,
+          prevDate: null,
+          nextDate: null,
+        };
+      }
+
+      // Оригинальная логика для конкретной даты
       const targetDate = new Date(date);
 
       // Начало и конец выбранного дня
@@ -78,6 +99,29 @@ export const studentCourseRouter = router({
         nextDate,
       };
     }),
+  getAvailableDates: protectedProcedure.query(async () => {
+    const studentCourses = await prisma.studentCourse.findMany({
+      select: {
+        createdAt: true,
+      },
+      distinct: ["createdAt"],
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    // Форматируем даты в формат YYYY-MM-DD
+    const formattedDates = studentCourses.map((sc) => {
+      const date = new Date(sc.createdAt);
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      const year = date.getFullYear();
+      return `${year}-${month}-${day}`;
+    });
+
+    // Убираем дубликаты
+    return [...new Set(formattedDates)];
+  }),
 
   bulkUpdateExamResult: protectedProcedure
     .input(

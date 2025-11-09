@@ -27,26 +27,24 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { baseUrl } from '@/lib/api'
 import type { CheckedState } from '@radix-ui/react-checkbox'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { trpc } from '@/utils/trpc'
 
 export const Route = createFileRoute('/dashboard/certificates/generate')({
   component: GenerateCertificatesPage,
 })
 
 function GenerateCertificatesPage() {
-  const [currentDate, setCurrentDate] = useState<string>(() => {
-    const today = new Date()
-    return `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`
-  })
+  const [selectedDate, setSelectedDate] = useState<string>('')
   const [selectedCourses, setSelectedCourses] = useState<string[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-
   const [isGenerating, setIsGenerating] = useState(false)
-  // const [generatingStatus, setGeneratingStatus] = useState<{
-  //   [key: string]: {
-  //     message: string
-  //     status: 'pending' | 'success' | 'error'
-  //   }
-  // }>({})
   const [message, setMessage] = useState(
     '2025-yilning 4-avgust kunidan 19-avgust kuniga qadar \n Ichki ishlar vazirligi Malaka oshirish institutida',
   )
@@ -55,21 +53,12 @@ function GenerateCertificatesPage() {
     () => new Date().toISOString().split('T')[0],
   )
 
-  const { studentCourses, prevDate, nextDate, isLoading, refetch } =
-    useStudentCourses(currentDate)
+  // Получаем доступные даты
+  const { data: availableDates = [] } =
+    trpc.studentCourse.getAvailableDates.useQuery()
 
-  // Обработчики пагинации
-  const goToPrevDate = () => {
-    if (!prevDate) return
-    setCurrentDate(prevDate)
-    setSelectedCourses([]) // Сброс выбора при смене даты
-  }
-
-  const goToNextDate = () => {
-    if (!nextDate) return
-    setCurrentDate(nextDate)
-    setSelectedCourses([]) // Сброс выбора при смене даты
-  }
+  // Получаем данные курсов для выбранной даты
+  const { studentCourses, isLoading, refetch } = useStudentCourses(selectedDate)
 
   // Выбор/снятие отдельного курса
   const toggleSelectCourse = (courseId: string) => {
@@ -114,7 +103,6 @@ function GenerateCertificatesPage() {
   }
 
   // Подтверждение генерации сертификатов
-
   const handleConfirmGenerate = async () => {
     if (selectedCourses.length === 0) return
 
@@ -124,13 +112,6 @@ function GenerateCertificatesPage() {
 
     try {
       for (const courseId of selectedCourses) {
-        // setGeneratingStatus((prev) => {
-        //   prev[courseId] = {
-        //     message: `Sertifikat yaratilmoqda...`,
-        //     status: 'pending',
-        //   }
-        //   return { ...prev }
-        // })
         try {
           const response = await fetch(baseUrl + '/certificate/generate', {
             method: 'POST',
@@ -149,24 +130,10 @@ function GenerateCertificatesPage() {
 
           if (response.ok && data.success) {
             successes.push(courseId)
-            // setGeneratingStatus((prev) => {
-            //   prev[courseId] = {
-            //     message: 'Sertifikat muvaffaqiyatli yaratildi',
-            //     status: 'success',
-            //   }
-            //   return { ...prev }
-            // })
           } else {
             errors.push(
               `${getStudentName(courseId)}: ${data.message || "Noma'lum xatolik"}`,
             )
-            // setGeneratingStatus((prev) => {
-            //   prev[courseId] = {
-            //     message: 'Xatolik yuz berdi',
-            //     status: 'error',
-            //   }
-            //   return { ...prev }
-            // })
           }
         } catch (error) {
           errors.push(`${getStudentName(courseId)}: Xatolik yuz berdi`)
@@ -216,7 +183,6 @@ function GenerateCertificatesPage() {
       setSelectedCourses([])
       setIsDialogOpen(false)
       refetch()
-      // Здесь можно добавить обновление данных
     }
   }
 
@@ -230,31 +196,32 @@ function GenerateCertificatesPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={goToPrevDate}
-            disabled={!prevDate || isLoading}
+          {/* Заменяем кнопки навигации на Select */}
+          <Select
+            value={selectedDate}
+            onValueChange={(value) =>
+              value === 'all' ? setSelectedDate('') : setSelectedDate(value)
+            }
           >
-            Ortga
-          </Button>
-          <div className="text-lg font-medium">
-            {currentDate
-              ? format(parseISO(currentDate), 'dd.MM.yyyy')
-              : 'Загрузка...'}
-          </div>
-          <Button
-            variant="outline"
-            onClick={goToNextDate}
-            disabled={!nextDate || isLoading}
-          >
-            Oldiga
-          </Button>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Sana tanlang" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Barcha sanalar</SelectItem>
+              {availableDates.map((item: string) => (
+                <SelectItem key={item} value={item}>
+                  {format(item, 'dd.MM.yyyy')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button
               onClick={handleGenerateClick}
-              disabled={selectedCourses.length === 0}
+              disabled={selectedCourses.length === 0 || !selectedDate}
             >
               Sertifikat yaratish
             </Button>
@@ -312,7 +279,6 @@ function GenerateCertificatesPage() {
                       <TableHead>Kurs</TableHead>
                       <TableHead>Sana</TableHead>
                       <TableHead>Sertifikat raqami</TableHead>
-                      {/* <TableHead>Status</TableHead> */}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -328,20 +294,6 @@ function GenerateCertificatesPage() {
                           <TableCell>
                             {course.certificateNumber || 'Yaratiladi...'}
                           </TableCell>
-                          {/* <TableHead>
-                            {generatingStatus[course.courseId]?.status ===
-                            'success' ? (
-                              <CheckCircle className="text-green-500 w-7 h-7 pe-2" />
-                            ) : generatingStatus[course.courseId]?.status ===
-                              'error' ? (
-                              <X className="text-red-500 w-7 h-7 pe-2" />
-                            ) : generatingStatus[course.courseId]?.status ===
-                              'pending' ? (
-                              <Loader className="text-gray-500 w-7 h-7 pe-2 animate-spin" />
-                            ) : (
-                              <Clock className="text-gray-500 w-7 h-7 pe-2" />
-                            )}
-                          </TableHead> */}
                         </TableRow>
                       ))}
                   </TableBody>
@@ -365,6 +317,13 @@ function GenerateCertificatesPage() {
         </Dialog>
       </div>
 
+      {/* Информация о выбранной дате */}
+      {selectedDate && (
+        <div className="text-lg font-medium">
+          Tanlangan sana: {format(parseISO(selectedDate), 'dd.MM.yyyy')}
+        </div>
+      )}
+
       <div className="rounded-md border">
         <Table className="text-lg">
           <TableHeader>
@@ -379,7 +338,9 @@ function GenerateCertificatesPage() {
                           .length
                     }
                     onCheckedChange={toggleSelectAll}
-                    disabled={isLoading || studentCourses.length === 0}
+                    disabled={
+                      isLoading || studentCourses.length === 0 || !selectedDate
+                    }
                   />
                 </div>
               </TableHead>
@@ -411,10 +372,16 @@ function GenerateCertificatesPage() {
                   </TableCell>
                 </TableRow>
               ))
+            ) : !selectedDate ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8">
+                  Iltimos, sana tanlang
+                </TableCell>
+              </TableRow>
             ) : studentCourses.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
-                  Hech qanday ma'lumot topilmadi
+                <TableCell colSpan={6} className="text-center py-8">
+                  Tanlangan sana uchun hech qanday ma'lumot topilmadi
                 </TableCell>
               </TableRow>
             ) : (

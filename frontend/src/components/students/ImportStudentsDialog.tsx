@@ -452,7 +452,7 @@ export default function ImportStudentsDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="outline" className={className}>
+        <Button variant="outline" size={'lg'} className={className}>
           <svg
             stroke="currentColor"
             fill="currentColor"

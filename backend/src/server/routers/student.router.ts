@@ -60,12 +60,27 @@ export const studentRouter = router({
           search: z.string().optional(),
           department: z.string().optional(),
           courseId: z.string().optional(),
-          date: z.date().optional(),
+          date: z.string().optional(), // Теперь строка в формате ДД.ММ.ГГГГ
         })
         .optional()
     )
     .query(async ({ input }) => {
-      const { search, department, courseId } = input || {};
+      const { search, department, courseId, date } = input || {};
+
+      // Преобразуем строку даты обратно в Date объект для фильтрации
+      let dateFilter = {};
+      if (date) {
+        const [day, month, year] = date.split(".").map(Number);
+        const startDate = new Date(year, month - 1, day);
+        const endDate = new Date(year, month - 1, day + 1);
+
+        dateFilter = {
+          createdAt: {
+            gte: startDate,
+            lt: endDate,
+          },
+        };
+      }
 
       return prisma.student.findMany({
         where: {
@@ -73,20 +88,21 @@ export const studentRouter = router({
             {
               courses: {
                 some: {
-                  course: {
-                    id: courseId,
-                  },
-                  department,
+                  ...(courseId && { courseId }),
+                  ...(department && { department }),
+                  ...dateFilter,
                 },
               },
             },
           ],
-          OR: [
-            { fullName: { contains: search, mode: "insensitive" } },
-            { passport: { contains: search, mode: "insensitive" } },
-            { rank: { contains: search, mode: "insensitive" } },
-            { phone: { contains: search, mode: "insensitive" } },
-          ],
+          OR: search
+            ? [
+                { fullName: { contains: search, mode: "insensitive" } },
+                { passport: { contains: search, mode: "insensitive" } },
+                { rank: { contains: search, mode: "insensitive" } },
+                { phone: { contains: search, mode: "insensitive" } },
+              ]
+            : undefined,
         },
         orderBy: { createdAt: "desc" },
         include: {
@@ -95,6 +111,99 @@ export const studentRouter = router({
           },
         },
       });
+    }),
+
+  getAvailableDates: protectedProcedure
+    .input(
+      z
+        .object({
+          department: z.string().optional(),
+          courseId: z.string().optional(),
+        })
+        .optional()
+    )
+    .query(async ({ input }) => {
+      const { department, courseId } = input || {};
+
+      const studentCourses = await prisma.studentCourse.findMany({
+        where: {
+          ...(department && { department }),
+          ...(courseId && { courseId }),
+        },
+        select: {
+          createdAt: true,
+        },
+        distinct: ["createdAt"],
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+      // Форматируем даты в формат ДД.ММ.ГГГГ
+      const formattedDates = studentCourses.map((sc) => {
+        const date = new Date(sc.createdAt);
+        const day = date.getDate().toString().padStart(2, "0");
+        const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        const year = date.getFullYear();
+        return `${day}.${month}.${year}`;
+      });
+
+      // Убираем дубликаты на случай, если несколько записей в один день
+      return [...new Set(formattedDates)];
+    }),
+
+  export: protectedProcedure
+    .input(
+      z
+        .object({
+          search: z.string().optional(),
+          department: z.string().optional(),
+          courseId: z.string().optional(),
+          date: z.string().optional(),
+        })
+        .optional()
+    )
+    .mutation(async ({ input }) => {
+      const { search, department, courseId, date } = input || {};
+
+      // Получаем данные с группировкой
+      const studentCourses = await prisma.studentCourse.findMany({
+        where: {
+          ...(department && { department }),
+          ...(courseId && { courseId }),
+          ...(date && {
+            createdAt: {
+              gte: new Date(date.split(".").reverse().join("-")),
+              lt: new Date(
+                new Date(date.split(".").reverse().join("-")).getTime() +
+                  24 * 60 * 60 * 1000
+              ),
+            },
+          }),
+        },
+        include: {
+          student: true,
+          course: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      });
+
+      // Группируем по датам
+      const groupedByDate = studentCourses.reduce(
+        (acc, sc) => {
+          const dateKey = sc.createdAt.toLocaleDateString("ru-RU");
+          if (!acc[dateKey]) {
+            acc[dateKey] = [];
+          }
+          acc[dateKey].push(sc);
+          return acc;
+        },
+        {} as Record<string, typeof studentCourses>
+      );
+
+      return groupedByDate;
     }),
 
   // Импорт студентов из файла

@@ -16,27 +16,32 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useStudentCourses } from '@/hooks/useStudentCourses'
 import { toast } from 'sonner'
 import { CircleCheckBig, XCircle } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { trpc } from '@/utils/trpc'
 
 export const Route = createFileRoute('/dashboard/courses/results')({
   component: CourseResultsPage,
 })
 
 function CourseResultsPage() {
-  const [currentDate, setCurrentDate] = useState<string>(() => {
-    const today = new Date()
-    return `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`
-  })
+  const [selectedDate, setSelectedDate] = useState<string>('') // Пустая строка = все даты
   const [examResults, setExamResults] = useState<Record<string, boolean>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const queryClient = useQueryClient()
 
-  const {
-    studentCourses,
-    prevDate,
-    nextDate,
-    isLoading,
-    bulkUpdateExamResult,
-  } = useStudentCourses(currentDate)
+  // Получаем доступные даты
+  const { data: availableDates = [] } =
+    trpc.studentCourse.getAvailableDates.useQuery()
+
+  // Получаем данные курсов для выбранной даты (пустая строка = все данные)
+  const { studentCourses, isLoading, bulkUpdateExamResult } =
+    useStudentCourses(selectedDate)
 
   // Инициализация состояний чекбоксов
   useEffect(() => {
@@ -52,18 +57,7 @@ function CourseResultsPage() {
     } else {
       setExamResults({})
     }
-  }, [studentCourses])
-
-  // Обработчики пагинации
-  const goToPrevDate = () => {
-    if (!prevDate) return
-    setCurrentDate(prevDate)
-  }
-
-  const goToNextDate = () => {
-    if (!nextDate) return
-    setCurrentDate(nextDate)
-  }
+  }, [isLoading])
 
   // Обновление отдельного значения
   const handleExamResultChange = (courseId: string, value: boolean) => {
@@ -72,12 +66,16 @@ function CourseResultsPage() {
       [courseId]: value,
     }))
   }
-  // Обновление всех значения
+
+  // Обновление всех значений
   const handleAllExamResultsChange = (value: boolean) => {
-    for (const exam in examResults) {
-      handleExamResultChange(exam, value)
-    }
+    const newExamResults = { ...examResults }
+    Object.keys(newExamResults).forEach((courseId) => {
+      newExamResults[courseId] = value
+    })
+    setExamResults(newExamResults)
   }
+
   // Отправка изменений
   const handleSubmit = async () => {
     setIsSubmitting(true)
@@ -127,37 +125,51 @@ function CourseResultsPage() {
   }
 
   // Проверяем, есть ли изменения
-  const hasChanges = Object.keys(examResults).length > 0
+  const hasChanges =
+    Object.keys(examResults).length > 0 &&
+    Object.values(examResults).some((value) => value !== false)
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={goToPrevDate}
-            disabled={!prevDate || isLoading}
+          {/* Заменяем кнопки навигации на Select */}
+          <Select
+            value={selectedDate}
+            onValueChange={(value) =>
+              value === 'all' ? setSelectedDate('') : setSelectedDate(value)
+            }
           >
-            Oldingisi
-          </Button>
-          <div className="text-lg font-medium">
-            {currentDate
-              ? format(parseISO(currentDate), 'dd.MM.yyyy')
-              : 'Загрузка...'}
-          </div>
-          <Button
-            variant="outline"
-            onClick={goToNextDate}
-            disabled={!nextDate || isLoading}
-          >
-            Keyingisi
-          </Button>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Sana tanlang" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Barcha sanalar</SelectItem>
+              {availableDates.map((date) => (
+                <SelectItem key={date} value={date}>
+                  {format(parseISO(date), 'dd.MM.yyyy')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        <Button onClick={handleSubmit} disabled={!hasChanges || isSubmitting}>
+        <Button
+          onClick={handleSubmit}
+          disabled={!hasChanges || isSubmitting || !studentCourses.length}
+        >
           {isSubmitting ? 'Saqlanmoqda...' : 'Saqlash'}
         </Button>
       </div>
+
+      {/* Информация о выбранном фильтре */}
+      {selectedDate ? (
+        <div className="text-lg font-medium">
+          Tanlangan sana: {format(parseISO(selectedDate), 'dd.MM.yyyy')}
+        </div>
+      ) : (
+        <div className="text-lg font-medium">Barcha sanalar ko'rsatilmoqda</div>
+      )}
 
       <div className="rounded-md border">
         <Table className="text-lg">
@@ -169,7 +181,12 @@ function CourseResultsPage() {
               <TableHead className="text-center">
                 Imtihon natijasi <br />
                 <Checkbox
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !studentCourses.length}
+                  checked={
+                    studentCourses.length > 0 &&
+                    Object.keys(examResults).length > 0 &&
+                    Object.values(examResults).every((value) => value === true)
+                  }
                   onCheckedChange={(value) =>
                     handleAllExamResultsChange(!!value)
                   }
@@ -198,7 +215,9 @@ function CourseResultsPage() {
             ) : studentCourses.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-8">
-                  Нет данных на выбранную дату
+                  {selectedDate
+                    ? "Tanlangan sana uchun ma'lumot topilmadi"
+                    : "Hech qanday ma'lumot topilmadi"}
                 </TableCell>
               </TableRow>
             ) : (

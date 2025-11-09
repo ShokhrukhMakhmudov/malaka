@@ -1,14 +1,14 @@
 // src/hooks/useStudentCourses.ts
 import { trpc } from '@/utils/trpc'
 
-export function useStudentCourses(date: string) {
+export function useStudentCourses(date: string = '') {
   // Получение курсов студентов по дате
   const {
     data: studentCoursesData,
     isLoading,
     refetch,
   } = trpc.studentCourse.getByDate.useQuery(
-    { date },
+    { date: date },
     {
       enabled: true,
       refetchOnWindowFocus: false,
