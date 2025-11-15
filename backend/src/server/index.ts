@@ -23,7 +23,11 @@ const PORT = process.env.PORT || 3000;
 
 // Настройка CORS
 const corsOptions = {
-  origin: "http://localhost:4000",
+  origin: [
+    "http://localhost:4000",
+    "http://ser.ipkmvd.uz",
+    "https://ser.ipkmvd.uz",
+  ],
 };
 
 app.use(cors(corsOptions));
