@@ -24,7 +24,7 @@ export default function CertificateSearchPage() {
   const totalStudentsCourses = studentCountQuery.data?.totalStudentsCourses || 0
   const totalCourses = studentCountQuery.data?.totalCourses || 0
   const passedExams = studentCountQuery.data?.passedExams || 0
-
+  const unpassedExams = studentCountQuery.data?.unpassedExams || 0
   // Расчет процента успешной сдачи экзаменов
   const passRate =
     totalStudents > 0
@@ -73,30 +73,9 @@ export default function CertificateSearchPage() {
       <Header />
 
       {authStore.state.user.isSuperAdmin && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 pt-34">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-12 pt-34">
           {/* Общая статистика */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <StatCard
-              title="Tinglovchilar"
-              value={totalStudents}
-              icon={
-                <svg
-                  className="w-8 h-8 text-blue-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-              }
-              loading={studentCountQuery.isLoading}
-            />
-
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
             <StatCard
               title="O'quv kurslar"
               value={totalCourses}
@@ -119,6 +98,27 @@ export default function CertificateSearchPage() {
             />
 
             <StatCard
+              title="Tinglovchilar"
+              value={totalStudents}
+              icon={
+                <svg
+                  className="w-8 h-8 text-blue-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+              }
+              loading={studentCountQuery.isLoading}
+            />
+
+            <StatCard
               title="Sertifikatga ega bo'lganlar"
               value={passedExams}
               icon={
@@ -133,6 +133,28 @@ export default function CertificateSearchPage() {
                     strokeLinejoin="round"
                     strokeWidth={2}
                     d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+              }
+              loading={studentCountQuery.isLoading}
+            />
+
+            <StatCard
+              title="Sertifikatga ega bo'lmaganlar"
+              value={unpassedExams}
+              icon={
+                <svg
+                  stroke="currentColor"
+                  fill="currentColor"
+                  stroke-width="0"
+                  viewBox="0 0 24 24"
+                  className="w-8 h-8 text-red-300"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path fill="none" d="M0 0h24v24H0V0z" stroke="none" />
+                  <path
+                    d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zm-9-4h2v2h-2zm0-6h2v4h-2z"
+                    stroke="none"
                   />
                 </svg>
               }
@@ -345,7 +367,7 @@ const StatCard = ({
   loading: boolean
 }) => {
   return (
-    <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-lg p-6 border border-white/10">
+    <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-lg p-6 border border-white/10 flex items-center">
       <div className="flex items-center">
         <div className="p-3 rounded-lg mr-4 bg-white/20">{icon}</div>
         <div>

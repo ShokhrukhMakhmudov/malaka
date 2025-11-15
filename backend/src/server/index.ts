@@ -373,10 +373,12 @@ app.post("/certificate/generate", async (req, res) => {
       fontBold
     );
 
+    const CourseName = `${studentCourse.course.name.includes("Boshlang'ich") ? "Boshlang'ich kasbiy tayyorgarlik" : studentCourse.course.name.includes("Qayta tayyorlash") ? "Qayta tayyorlash" : "Malaka oshirish"} haqida`;
+
     // Название курса
     addText(
       // `${studentCourse.course.name} haqida`,
-      `Malaka oshirish haqida`,
+      CourseName,
       TEMPLATE_COORDINATES.courseName.x,
       TEMPLATE_COORDINATES.courseName.y,
       18

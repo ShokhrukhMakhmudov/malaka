@@ -11,6 +11,7 @@ export const dashboardRouter = router({
       passedExams,
       totalStudentsCourses,
       activeCourses,
+      unpassedExams,
     ] = await Promise.all([
       prisma.student.count(),
       prisma.course.count(),
@@ -23,6 +24,9 @@ export const dashboardRouter = router({
           students: { some: {} },
         },
       }),
+      prisma.studentCourse.count({
+        where: { examResult: false },
+      }),
     ]);
 
     return {
@@ -31,6 +35,7 @@ export const dashboardRouter = router({
       totalStudentsCourses,
       passedExams,
       activeCourses,
+      unpassedExams,
     };
   }),
 
