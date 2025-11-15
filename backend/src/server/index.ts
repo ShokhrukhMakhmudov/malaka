@@ -34,6 +34,11 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
+// test
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
 // tRPC роутер
 app.use(
   "/trpc",
