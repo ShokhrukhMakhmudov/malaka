@@ -15,9 +15,12 @@ import { trpc } from '@/utils/trpc'
 import { format } from 'date-fns'
 import Header from '@/components/Header'
 import { authStore } from '@/stores/auth.store'
+import { yearStore } from '@/stores/year.store'
 import Stats from '@/components/stats'
 export default function CertificateSearchPage() {
-  const studentCountQuery = trpc.dashboard.getStudentCount.useQuery()
+  const studentCountQuery = trpc.dashboard.getStudentCount.useQuery({
+    year: yearStore.state,
+  })
 
   // Расчет общей статистики
   const totalStudents = studentCountQuery.data?.totalStudents || 0
@@ -49,8 +52,8 @@ export default function CertificateSearchPage() {
     )
 
   useEffect(() => {
-    refetch()
-  }, [])
+    studentCountQuery.refetch()
+  }, [yearStore.state])
   const handleSearch = async () => {
     if (!searchValue.trim()) return
 

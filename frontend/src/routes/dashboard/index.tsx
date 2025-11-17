@@ -23,7 +23,7 @@ export const Route = createFileRoute('/dashboard/')({
 export default function DashboardPage() {
   // Запросы данных
   const { data: studentCount, isLoading: isCountLoading } =
-    trpc.dashboard.getStudentCount.useQuery()
+    trpc.dashboard.getStudentCount.useQuery({ year: new Date().getFullYear() })
   const { data: yearlyStatsData, isLoading: isYearlyStatsLoading } =
     trpc.dashboard.getCourseYearlyStats.useQuery()
   // const { data: recentStudents, isLoading: isRecentLoading } =

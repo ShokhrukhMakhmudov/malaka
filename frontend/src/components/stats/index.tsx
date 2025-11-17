@@ -1,3 +1,4 @@
+import { yearStore } from '@/stores/year.store'
 import { trpc } from '@/utils/trpc'
 
 // Тип данных для курса
@@ -9,7 +10,10 @@ type CourseStats = {
   passedStudents: number
 }
 export default function Stats() {
-  const courseStatsQuery = trpc.dashboard.getCourseStats.useQuery()
+  const courseStatsQuery = trpc.dashboard.getCourseStats.useQuery({
+    year: yearStore.state,
+  })
+
   return (
     <>
       {/* Карточки курсов */}

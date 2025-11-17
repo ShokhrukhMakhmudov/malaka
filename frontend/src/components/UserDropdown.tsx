@@ -10,6 +10,16 @@ import { useNavigate } from '@tanstack/react-router'
 const UserDropdown = () => {
   const navigate = useNavigate()
   const handleLogout = () => {
+    authStore.setState({
+      isAuth: false,
+      user: {
+        id: '',
+        login: '',
+        name: '',
+        isSuperAdmin: false,
+      },
+    })
+    localStorage.removeItem('token')
     window.location.reload()
   }
 

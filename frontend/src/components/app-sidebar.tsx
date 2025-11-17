@@ -113,7 +113,8 @@ export function AppSidebar() {
                   <Link
                     to={'/'}
                     className="gap-3 justify-stretch"
-                    onClick={() =>
+                    onClick={() => {
+                      localStorage.removeItem('token')
                       authStore.setState({
                         isAuth: false,
                         user: {
@@ -123,7 +124,7 @@ export function AppSidebar() {
                           isSuperAdmin: false,
                         },
                       })
-                    }
+                    }}
                   >
                     <DoorOpen
                       style={{
