@@ -631,12 +631,38 @@ async function generateCertificate({
 
     // Генерируем новый номер сертификата
     let certificateNumber;
+    let nextCount: number;
 
-    if (studentCourse.certificateNumber) {
-      certificateNumber = studentCourse.certificateNumber.slice(3);
-    } else {
-      const nextCount = counter.lastCount + 1;
+    if (counter.freeNumbers && counter.freeNumbers.length > 0) {
+      // Берем минимальный свободный номер
+      nextCount = Math.min(...counter.freeNumbers);
+
+      // Удаляем этот номер из массива свободных
+      const updatedFreeNumbers = counter.freeNumbers.filter(
+        (num) => num !== nextCount
+      );
+
+      // Обновляем счетчик
+      await prisma.certificateCounter.update({
+        where: { prefix: studentCourse.course.prefix },
+        data: {
+          freeNumbers: updatedFreeNumbers,
+          // Обновляем lastCount если нужно
+          lastCount: Math.max(counter.lastCount, nextCount),
+        },
+      });
+
       certificateNumber = nextCount.toString().padStart(5, "0");
+    } else {
+      // Используем старую логику - следующий номер
+      nextCount = counter.lastCount + 1;
+      certificateNumber = nextCount.toString().padStart(5, "0");
+
+      // Обновляем счетчик
+      await prisma.certificateCounter.update({
+        where: { prefix: studentCourse.course.prefix },
+        data: { lastCount: nextCount },
+      });
     }
 
     const certificateSeries = `${studentCourse.course.prefix} ${certificateNumber}`;
@@ -829,6 +855,7 @@ async function generateCertificate({
     };
   }
 }
+
 // Инициализация первого супер-админа при запуске
 async function initializeFirstAdmin() {
   const adminCount = await prisma.superAdmin.count();

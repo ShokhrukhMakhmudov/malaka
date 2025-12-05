@@ -1,6 +1,7 @@
 import { router, protectedProcedure } from "../trpc";
 import { z } from "zod";
 import prisma from "../prisma";
+import { Prisma } from "@prisma/client";
 // Схема для связи студент-курс
 const StudentCourseInput = z.object({
   courseId: z.string().uuid(),
@@ -271,11 +272,49 @@ export const studentRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ input }) => {
-      return prisma.student.delete({
-        where: { id: input.id },
+      return await prisma.$transaction(async (tx) => {
+        // Сначала находим студента со всеми его курсами
+        const student = await tx.student.findUnique({
+          where: { id: input.id },
+          include: {
+            courses: {
+              // Множественное число, если студент может иметь несколько курсов
+              include: {
+                course: true,
+              },
+            },
+          },
+        });
+
+        if (!student) {
+          throw new Error("Student not found");
+        }
+
+        // Освобождаем номера всех сертификатов студента
+        const freeCertificatePromises = student.courses
+          .filter((sc) => sc.certificateNumber)
+          .map(async (studentCourse) => {
+            await markCertificateNumberAsFree(
+              studentCourse.course.prefix,
+              studentCourse.certificateNumber!
+            );
+          });
+
+        await Promise.all(freeCertificatePromises);
+
+        // Удаляем все курсы студентаa
+        if (student.courses.length > 0) {
+          await tx.studentCourse.deleteMany({
+            where: { studentId: input.id },
+          });
+        }
+
+        // Удаляем самого студента
+        return tx.student.delete({
+          where: { id: input.id },
+        });
       });
     }),
-
   // Обновление связи студент-курс
   updateCourse: protectedProcedure
     .input(
@@ -401,5 +440,38 @@ export const studentRouter = router({
       };
     }),
 });
+
+async function markCertificateNumberAsFree(
+  prefix: string,
+  certificateNumber: string,
+  prismaClient?: Prisma.TransactionClient
+) {
+  const prismaToUse = prismaClient || prisma;
+
+  // Извлекаем числовую часть
+  const parts = certificateNumber.split(" ");
+  if (parts.length !== 2) return;
+
+  const numberPart = parts[1];
+  const num = parseInt(numberPart, 10);
+  if (isNaN(num)) return;
+
+  // Находим счетчик
+  const counter = await prismaToUse.certificateCounter.findUnique({
+    where: { prefix: prefix },
+  });
+
+  if (counter) {
+    // Добавляем номер в массив свободных
+    const updatedFreeNumbers = [...(counter.freeNumbers || []), num].sort(
+      (a, b) => a - b
+    );
+
+    await prismaToUse.certificateCounter.update({
+      where: { prefix: prefix },
+      data: { freeNumbers: updatedFreeNumbers },
+    });
+  }
+}
 
 export type StudentRouter = typeof studentRouter;

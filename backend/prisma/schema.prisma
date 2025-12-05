@@ -92,10 +92,11 @@ model StudentCourse {
 
 model CertificateCounter {
   id        String   @id @default(uuid())
-  prefix    String   @unique
-  lastCount Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  prefix      String   @unique
+  lastCount   Int      @default(0)
+  freeNumbers Int[]    @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@map("certificate_counters")
 }
