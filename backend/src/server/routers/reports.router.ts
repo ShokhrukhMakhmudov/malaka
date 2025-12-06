@@ -299,6 +299,63 @@ export const reportsRouter = router({
       worksheet.getCell(`R${rowIndex}`).value =
         total.withoutCertificate["katta serjant"];
 
+      rowIndex++;
+
+      worksheet.getCell(`A${rowIndex}`).value = "";
+      worksheet.getCell(`B${rowIndex}`).value = "Umumiy";
+
+      const totalAll =
+        total.total["podpolkovnik"] +
+        total.total["mayor"] +
+        total.total["kapitan"] +
+        total.total["katta serjant"];
+
+      const totalParticipantsSum =
+        total.participants["podpolkovnik"] +
+        total.participants["mayor"] +
+        total.participants["kapitan"] +
+        total.participants["katta serjant"];
+
+      const totalWithCertificateSum =
+        total.withCertificate["podpolkovnik"] +
+        total.withCertificate["mayor"] +
+        total.withCertificate["kapitan"] +
+        total.withCertificate["katta serjant"];
+
+      const totalWithoutCertificateSum =
+        total.withoutCertificate["podpolkovnik"] +
+        total.withoutCertificate["mayor"] +
+        total.withoutCertificate["kapitan"] +
+        total.withoutCertificate["katta serjant"];
+
+      worksheet.mergeCells(`C${rowIndex}:F${rowIndex}`);
+      worksheet.getCell(`C${rowIndex}`).value = totalAll;
+      worksheet.getCell(`C${rowIndex}`).alignment = {
+        horizontal: "center",
+        vertical: "middle",
+      };
+
+      worksheet.mergeCells(`G${rowIndex}:J${rowIndex}`);
+      worksheet.getCell(`G${rowIndex}`).value = totalParticipantsSum;
+      worksheet.getCell(`G${rowIndex}`).alignment = {
+        horizontal: "center",
+        vertical: "middle",
+      };
+
+      worksheet.mergeCells(`K${rowIndex}:N${rowIndex}`);
+      worksheet.getCell(`K${rowIndex}`).value = totalWithCertificateSum;
+      worksheet.getCell(`K${rowIndex}`).alignment = {
+        horizontal: "center",
+        vertical: "middle",
+      };
+
+      worksheet.mergeCells(`O${rowIndex}:R${rowIndex}`);
+      worksheet.getCell(`O${rowIndex}`).value = totalWithoutCertificateSum;
+      worksheet.getCell(`O${rowIndex}`).alignment = {
+        horizontal: "center",
+        vertical: "middle",
+      };
+
       // Форматирование
       // Устанавливаем стили для заголовков
       for (let row = 3; row <= 4; row++) {
