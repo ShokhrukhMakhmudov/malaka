@@ -341,7 +341,7 @@ export default function StudentList() {
               onSuccess={refetch}
               className="flex items-center"
             />
-            <CreateStudentDialog onSuccess={refetch} />
+            {/* <CreateStudentDialog onSuccess={refetch} /> */}
           </div>
         )}
       </div>
