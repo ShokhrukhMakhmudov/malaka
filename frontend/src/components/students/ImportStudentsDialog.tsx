@@ -59,6 +59,7 @@ export default function ImportStudentsDialog({
   const [date, setDate] = useState<string>(
     () => new Date().toISOString().split('T')[0],
   )
+  const [title, setTitle] = useState('Malaka oshirish haqida')
   const [message, setMessage] = useState<string>(
     '2025-yilning 4-avgust kunidan 19-avgust kuniga qadar \n Ichki ishlar vazirligi Malaka oshirish institutida',
   )
@@ -377,6 +378,7 @@ export default function ImportStudentsDialog({
             courseId,
             department,
             certificateData: {
+              title,
               message,
               date,
               additionalMessage,
@@ -740,6 +742,17 @@ export default function ImportStudentsDialog({
             >
               <div className="space-y-4">
                 <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Sertifikat sarlavhasi
+                    </label>
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">
                       Matn

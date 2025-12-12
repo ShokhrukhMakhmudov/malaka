@@ -249,7 +249,8 @@ const splitAndClean = (text: string) =>
 
 app.post("/certificate/generate", async (req, res) => {
   try {
-    const { studentCourseId, message, date, additionalMessage } = req.body;
+    const { studentCourseId, message, date, additionalMessage, title } =
+      req.body;
 
     // Получаем данные о курсе студента
     const studentCourse = await prisma.studentCourse.findUnique({
@@ -387,7 +388,7 @@ app.post("/certificate/generate", async (req, res) => {
     // Название курса
     addText(
       // `${studentCourse.course.name} haqida`,
-      CourseName,
+      title || CourseName,
       TEMPLATE_COORDINATES.courseName.x,
       TEMPLATE_COORDINATES.courseName.y,
       18
@@ -563,6 +564,7 @@ app.post("/api/student", async (req, res) => {
     if (certificateData && studentCourse.examResult) {
       certificateResponse = await generateCertificate({
         studentCourseId: studentCourse.id,
+        title: certificateData.title || "",
         message:
           certificateData.message || "Kursni muvaffaqiyatli tamomlagani uchun",
         additionalMessage: certificateData.additionalMessage,
@@ -588,11 +590,13 @@ app.post("/api/student", async (req, res) => {
 // Функция генерации сертификата (аналогичная вашему роуту /certificate/generate)
 async function generateCertificate({
   studentCourseId,
+  title,
   message,
   additionalMessage,
   date,
 }: {
   studentCourseId: string;
+  title: string;
   message: string;
   additionalMessage: string;
   date: string;
@@ -740,10 +744,11 @@ async function generateCertificate({
       fontBold
     );
 
+    const CourseName = `${studentCourse.course.name.includes("Boshlang'ich") ? "Boshlang'ich kasbiy tayyorgarlik" : studentCourse.course.name.includes("Qayta tayyorlash") ? "Qayta tayyorlash" : "Malaka oshirish"} haqida`;
+
     // Название курса
     addText(
-      // `${studentCourse.course.name} haqida`,
-      `Malaka oshirish haqida`,
+      title || CourseName,
       TEMPLATE_COORDINATES.courseName.x,
       TEMPLATE_COORDINATES.courseName.y,
       18
