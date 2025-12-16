@@ -270,9 +270,11 @@ app.post("/certificate/generate", async (req, res) => {
     }
 
     // Получаем или создаем счетчик для префикса курса
+    /*************  ✨ Windsurf Command 🌟  *************/
     let counter = await prisma.certificateCounter.findUnique({
       where: { prefix: studentCourse.course.prefix },
     });
+    /*******  fc20292a-e696-41e8-a2f7-416ec1daa068  *******/
 
     if (!counter) {
       counter = await prisma.certificateCounter.create({
@@ -285,12 +287,40 @@ app.post("/certificate/generate", async (req, res) => {
 
     // Генерируем новый номер сертификата
     let certificateNumber;
-    const nextCount = counter.lastCount + 1;
+    let nextCount: number = 0;
 
     if (studentCourse.certificateNumber) {
       certificateNumber = studentCourse.certificateNumber.slice(3);
-    } else {
+    } else if (counter.freeNumbers && counter.freeNumbers.length > 0) {
+      // Берем минимальный свободный номер
+      nextCount = Math.min(...counter.freeNumbers);
+
+      // Удаляем этот номер из массива свободных
+      const updatedFreeNumbers = counter.freeNumbers.filter(
+        (num) => num !== nextCount
+      );
+
+      // Обновляем счетчик
+      await prisma.certificateCounter.update({
+        where: { prefix: studentCourse.course.prefix },
+        data: {
+          freeNumbers: updatedFreeNumbers,
+          // Обновляем lastCount если нужно
+          lastCount: Math.max(counter.lastCount, nextCount),
+        },
+      });
+
       certificateNumber = nextCount.toString().padStart(5, "0");
+    } else {
+      // Используем старую логику - следующий номер
+      nextCount = counter.lastCount + 1;
+      certificateNumber = nextCount.toString().padStart(5, "0");
+
+      // Обновляем счетчик
+      await prisma.certificateCounter.update({
+        where: { prefix: studentCourse.course.prefix },
+        data: { lastCount: nextCount },
+      });
     }
 
     const certificateSeries = `${studentCourse.course.prefix} ${certificateNumber}`;
@@ -620,9 +650,11 @@ async function generateCertificate({
     }
 
     // Получаем или создаем счетчик для префикса курса
+    /*************  ✨ Windsurf Command 🌟  *************/
     let counter = await prisma.certificateCounter.findUnique({
       where: { prefix: studentCourse.course.prefix },
     });
+    /*******  fc20292a-e696-41e8-a2f7-416ec1daa068  *******/
 
     if (!counter) {
       counter = await prisma.certificateCounter.create({
@@ -637,7 +669,9 @@ async function generateCertificate({
     let certificateNumber;
     let nextCount: number;
 
-    if (counter.freeNumbers && counter.freeNumbers.length > 0) {
+    if (studentCourse.certificateNumber) {
+      certificateNumber = studentCourse.certificateNumber.slice(3);
+    } else if (counter.freeNumbers && counter.freeNumbers.length > 0) {
       // Берем минимальный свободный номер
       nextCount = Math.min(...counter.freeNumbers);
 
