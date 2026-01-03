@@ -310,6 +310,7 @@ export default function ImportStudentsDialog({
         const sendData = {
           courseId,
           department,
+          date,
           students: studentsData
             .filter((_, index) => !selectedStudents.has(index))
             .map((student) => ({

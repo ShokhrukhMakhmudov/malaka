@@ -50,9 +50,6 @@ export function YearSelect() {
             {year}
           </SelectItem>
         ))}
-        <SelectItem className="text-lg" key={'2026'} value={'2026'.toString()}>
-          {'2026'}
-        </SelectItem>
       </SelectContent>
     </Select>
   )

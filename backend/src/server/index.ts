@@ -119,7 +119,7 @@ app.post("/api/login", express.json(), async (req, res) => {
 });
 app.post("/api/students/import", async (req, res) => {
   try {
-    const { courseId, students, department } = req.body;
+    const { courseId, students, department, date } = req.body;
 
     if (!courseId || !students || !department || students.length === 0) {
       return res.status(400).json({ error: "Invalid data" });
@@ -175,6 +175,7 @@ app.post("/api/students/import", async (req, res) => {
               examResult: student.examResult || false,
               certificateNumber: null,
               certificateUrl: null,
+              createdAt: date ? new Date(date) : new Date(),
             },
           });
 
@@ -194,6 +195,7 @@ app.post("/api/students/import", async (req, res) => {
                   examResult: student.examResult || false,
                   certificateNumber: null,
                   certificateUrl: null,
+                  createdAt: date ? new Date(date) : new Date(),
                 },
               },
             },
@@ -508,6 +510,7 @@ app.post("/certificate/generate", async (req, res) => {
       data: {
         certificateNumber: certificateSeries,
         certificateUrl: `/certificates/${fileName}`,
+        createdAt: date ? new Date(date) : new Date(),
       },
     });
 
@@ -585,6 +588,9 @@ app.post("/api/student", async (req, res) => {
           courseId: courseId,
           department: department,
           examResult: student.examResult || false,
+          createdAt: certificateData?.date
+            ? new Date(certificateData.date)
+            : new Date(),
         },
       });
     }

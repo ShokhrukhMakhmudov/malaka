@@ -13,8 +13,8 @@ export const dashboardRouter = router({
     )
     .query(async ({ input }) => {
       const year = input.year || new Date().getFullYear();
-      const yearStart = new Date(year, 0, 1);
-      const yearEnd = new Date(year, 11, 31, 23, 59, 59, 999);
+      const yearStart = new Date(year, 0, 1); // 1 января
+      const yearEnd = new Date(year, 11, 31, 23, 59, 59, 999); // 31 декабря
 
       // Базовые запросы
       const [
