@@ -28,13 +28,13 @@ const regions = [
 ];
 
 // Вспомогательная функция для очистки имени листа
-function sanitizeSheetName(name: string) {
-  let sanitized = name.replace(/[\\/*?:[\]]/g, "");
-  if (sanitized.length > 31) {
-    sanitized = sanitized.substring(0, 31);
-  }
-  return sanitized;
-}
+// function sanitizeSheetName(name: string) {
+//   let sanitized = name.replace(/[\\/*?:[\]]/g, "");
+//   if (sanitized.length > 31) {
+//     sanitized = sanitized.substring(0, 31);
+//   }
+//   return sanitized;
+// }
 
 // Список подразделений из шаблона
 const DEPARTMENTS = regions;
@@ -517,7 +517,7 @@ export const reportsRouter = router({
 
       // Проходим по всем группам (датам)
       Object.entries(groupedStudents).forEach(
-        ([groupKey, { date, courseName, students: studentsInGroup }]) => {
+        ([_, { date, courseName, students: studentsInGroup }]) => {
           // Добавляем заголовок группы (как в картинке)
           worksheet.mergeCells(`A${currentRow}:E${currentRow}`);
           const groupHeaderCell = worksheet.getCell(`A${currentRow}`);

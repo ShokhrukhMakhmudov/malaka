@@ -165,7 +165,7 @@ export const studentRouter = router({
         .optional()
     )
     .mutation(async ({ input }) => {
-      const { search, department, courseId, date } = input || {};
+      const { department, courseId, date } = input || {};
 
       // Получаем данные с группировкой
       const studentCourses = await prisma.studentCourse.findMany({
