@@ -493,7 +493,7 @@ app.post("/certificate/generate", async (req, res) => {
     const pdfBytes = await pdfDoc.save();
     const outputDir = path.join(
       __dirname,
-      "../../../frontend/public/certificates"
+      "../../../frontend/dist/certificates"
     );
 
     if (!fs.existsSync(outputDir)) {
@@ -861,7 +861,7 @@ async function generateCertificate({
     const pdfBytes = await pdfDoc.save();
     const outputDir = path.join(
       __dirname,
-      "../../../frontend/public/certificates"
+      "../../../frontend/dist/certificates"
     );
 
     if (!fs.existsSync(outputDir)) {
