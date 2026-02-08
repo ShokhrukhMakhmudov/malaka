@@ -56,7 +56,11 @@ function GenerateCertificatesPage() {
 
   // Получаем доступные даты
   const { data: availableDates = [] } =
-    trpc.studentCourse.getAvailableDates.useQuery()
+    trpc.studentCourse.getAvailableDates.useQuery(undefined, {
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      staleTime: 0,
+    })
 
   // Получаем данные курсов для выбранной даты
   const { studentCourses, isLoading, refetch } = useStudentCourses(selectedDate)

@@ -8,6 +8,7 @@ interface AuthStore {
     name: string
     roles?: string[]
     isSuperAdmin: boolean
+    isMainAdmin?: boolean
   }
 }
 
@@ -18,5 +19,6 @@ export const authStore = new Store<AuthStore>({
     login: '',
     name: '',
     isSuperAdmin: false,
+    isMainAdmin: false,
   },
 })

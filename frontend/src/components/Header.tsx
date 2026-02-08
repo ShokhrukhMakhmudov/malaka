@@ -3,6 +3,7 @@ import { ModeToggle } from './mode-toogle'
 import UserDropdown from './UserDropdown'
 import { authStore } from '@/stores/auth.store'
 import { YearSelect } from './year-select'
+import ExportFailedStudents from './ExportFailedStudents'
 
 export default function Header() {
   return (
@@ -23,7 +24,12 @@ export default function Header() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {authStore.state.user.isSuperAdmin && <YearSelect />}
+          {authStore.state.user.isSuperAdmin && (
+            <>
+              <YearSelect />
+              <ExportFailedStudents />
+            </>
+          )}
           <ModeToggle />
           <a
             className="cursor-pointer hover:scale-110"

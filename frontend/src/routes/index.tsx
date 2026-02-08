@@ -18,9 +18,16 @@ import { authStore } from '@/stores/auth.store'
 import { yearStore } from '@/stores/year.store'
 import Stats from '@/components/stats'
 export default function CertificateSearchPage() {
-  const studentCountQuery = trpc.dashboard.getStudentCount.useQuery({
-    year: yearStore.state,
-  })
+  const studentCountQuery = trpc.dashboard.getStudentCount.useQuery(
+    {
+      year: yearStore.state,
+    },
+    {
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      staleTime: 0,
+    }
+  )
 
   // Расчет общей статистики
   const totalStudents = studentCountQuery.data?.totalStudents || 0

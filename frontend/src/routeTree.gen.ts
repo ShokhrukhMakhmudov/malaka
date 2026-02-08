@@ -10,12 +10,13 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StudentsRouteImport } from './routes/students'
-import { Route as IndexcopyRouteImport } from './routes/index copy'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardUsersRouteImport } from './routes/dashboard/users'
+import { Route as DashboardSuperadminsRouteImport } from './routes/dashboard/superadmins'
 import { Route as DashboardStudentsRouteImport } from './routes/dashboard/students'
+import { Route as DashboardLoginHistoryRouteImport } from './routes/dashboard/login-history'
 import { Route as DashboardCoursesIndexRouteImport } from './routes/dashboard/courses/index'
 import { Route as DashboardCoursesResultsRouteImport } from './routes/dashboard/courses/results'
 import { Route as DashboardCertificatesGenerateRouteImport } from './routes/dashboard/certificates/generate'
@@ -23,11 +24,6 @@ import { Route as DashboardCertificatesGenerateRouteImport } from './routes/dash
 const StudentsRoute = StudentsRouteImport.update({
   id: '/students',
   path: '/students',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexcopyRoute = IndexcopyRouteImport.update({
-  id: '/index copy',
-  path: '/index copy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
@@ -50,9 +46,19 @@ const DashboardUsersRoute = DashboardUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardSuperadminsRoute = DashboardSuperadminsRouteImport.update({
+  id: '/superadmins',
+  path: '/superadmins',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardStudentsRoute = DashboardStudentsRouteImport.update({
   id: '/students',
   path: '/students',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardLoginHistoryRoute = DashboardLoginHistoryRouteImport.update({
+  id: '/login-history',
+  path: '/login-history',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardCoursesIndexRoute = DashboardCoursesIndexRouteImport.update({
@@ -75,9 +81,10 @@ const DashboardCertificatesGenerateRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
-  '/index copy': typeof IndexcopyRoute
   '/students': typeof StudentsRoute
+  '/dashboard/login-history': typeof DashboardLoginHistoryRoute
   '/dashboard/students': typeof DashboardStudentsRoute
+  '/dashboard/superadmins': typeof DashboardSuperadminsRoute
   '/dashboard/users': typeof DashboardUsersRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/certificates/generate': typeof DashboardCertificatesGenerateRoute
@@ -86,9 +93,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/index copy': typeof IndexcopyRoute
   '/students': typeof StudentsRoute
+  '/dashboard/login-history': typeof DashboardLoginHistoryRoute
   '/dashboard/students': typeof DashboardStudentsRoute
+  '/dashboard/superadmins': typeof DashboardSuperadminsRoute
   '/dashboard/users': typeof DashboardUsersRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/certificates/generate': typeof DashboardCertificatesGenerateRoute
@@ -99,9 +107,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
-  '/index copy': typeof IndexcopyRoute
   '/students': typeof StudentsRoute
+  '/dashboard/login-history': typeof DashboardLoginHistoryRoute
   '/dashboard/students': typeof DashboardStudentsRoute
+  '/dashboard/superadmins': typeof DashboardSuperadminsRoute
   '/dashboard/users': typeof DashboardUsersRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/certificates/generate': typeof DashboardCertificatesGenerateRoute
@@ -113,9 +122,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/dashboard'
-    | '/index copy'
     | '/students'
+    | '/dashboard/login-history'
     | '/dashboard/students'
+    | '/dashboard/superadmins'
     | '/dashboard/users'
     | '/dashboard/'
     | '/dashboard/certificates/generate'
@@ -124,9 +134,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/index copy'
     | '/students'
+    | '/dashboard/login-history'
     | '/dashboard/students'
+    | '/dashboard/superadmins'
     | '/dashboard/users'
     | '/dashboard'
     | '/dashboard/certificates/generate'
@@ -136,9 +147,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/dashboard'
-    | '/index copy'
     | '/students'
+    | '/dashboard/login-history'
     | '/dashboard/students'
+    | '/dashboard/superadmins'
     | '/dashboard/users'
     | '/dashboard/'
     | '/dashboard/certificates/generate'
@@ -149,7 +161,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
-  IndexcopyRoute: typeof IndexcopyRoute
   StudentsRoute: typeof StudentsRoute
 }
 
@@ -160,13 +171,6 @@ declare module '@tanstack/react-router' {
       path: '/students'
       fullPath: '/students'
       preLoaderRoute: typeof StudentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/index copy': {
-      id: '/index copy'
-      path: '/index copy'
-      fullPath: '/index copy'
-      preLoaderRoute: typeof IndexcopyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -197,11 +201,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardUsersRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/superadmins': {
+      id: '/dashboard/superadmins'
+      path: '/superadmins'
+      fullPath: '/dashboard/superadmins'
+      preLoaderRoute: typeof DashboardSuperadminsRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/students': {
       id: '/dashboard/students'
       path: '/students'
       fullPath: '/dashboard/students'
       preLoaderRoute: typeof DashboardStudentsRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/login-history': {
+      id: '/dashboard/login-history'
+      path: '/login-history'
+      fullPath: '/dashboard/login-history'
+      preLoaderRoute: typeof DashboardLoginHistoryRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/courses/': {
@@ -229,7 +247,9 @@ declare module '@tanstack/react-router' {
 }
 
 interface DashboardRouteRouteChildren {
+  DashboardLoginHistoryRoute: typeof DashboardLoginHistoryRoute
   DashboardStudentsRoute: typeof DashboardStudentsRoute
+  DashboardSuperadminsRoute: typeof DashboardSuperadminsRoute
   DashboardUsersRoute: typeof DashboardUsersRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardCertificatesGenerateRoute: typeof DashboardCertificatesGenerateRoute
@@ -238,7 +258,9 @@ interface DashboardRouteRouteChildren {
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
+  DashboardLoginHistoryRoute: DashboardLoginHistoryRoute,
   DashboardStudentsRoute: DashboardStudentsRoute,
+  DashboardSuperadminsRoute: DashboardSuperadminsRoute,
   DashboardUsersRoute: DashboardUsersRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardCertificatesGenerateRoute: DashboardCertificatesGenerateRoute,
@@ -253,7 +275,6 @@ const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
-  IndexcopyRoute: IndexcopyRoute,
   StudentsRoute: StudentsRoute,
 }
 export const routeTree = rootRouteImport

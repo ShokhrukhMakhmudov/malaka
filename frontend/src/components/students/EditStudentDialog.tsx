@@ -51,9 +51,11 @@ export default function EditStudentDialog({
           (sc: StudentCourse) => ({
             id: sc.id,
             courseId: sc.courseId,
+            department: sc.department,
             examResult: sc.examResult,
             certificateNumber: sc.certificateNumber || '',
             certificateUrl: sc.certificateUrl || '',
+            createdAt: sc.createdAt, // Сохраняем дату создания
           }),
         ),
       )
@@ -65,6 +67,7 @@ export default function EditStudentDialog({
       ...studentCourses,
       {
         courseId: '',
+        department: '',
         examResult: false,
         certificateNumber: '',
         certificateUrl: '',
@@ -180,7 +183,6 @@ export default function EditStudentDialog({
                 onChange={(e) => setPassport(e.target.value)}
                 placeholder="AB1234567"
                 required
-                disabled // Паспорт нельзя менять
               />
             </div>
           </div>
@@ -206,7 +208,7 @@ export default function EditStudentDialog({
                 id="phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="+1234567890"
+                placeholder="+998 99 999 99 99"
               />
             </div>
           </div>

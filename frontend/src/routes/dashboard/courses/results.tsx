@@ -37,7 +37,11 @@ function CourseResultsPage() {
 
   // Получаем доступные даты
   const { data: availableDates = [] } =
-    trpc.studentCourse.getAvailableDates.useQuery()
+    trpc.studentCourse.getAvailableDates.useQuery(undefined, {
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      staleTime: 0,
+    })
 
   // Получаем данные курсов для выбранной даты (пустая строка = все данные)
   const { studentCourses, isLoading, bulkUpdateExamResult } =

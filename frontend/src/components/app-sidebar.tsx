@@ -19,6 +19,8 @@ import {
   LibraryBig,
   DoorOpen,
   LayoutDashboard,
+  Crown,
+  History,
 } from 'lucide-react'
 // Menu items.
 const items = [
@@ -58,8 +60,19 @@ const items = [
     url: '/dashboard/users',
     icon: User2,
   },
+  {
+    title: 'Super adminlar',
+    url: '/dashboard/superadmins',
+    icon: Crown,
+  },
+  {
+    title: 'Kirish tarixi',
+    url: '/dashboard/login-history',
+    icon: History,
+  },
 ]
 export function AppSidebar() {
+  const authState = authStore.state
   const state = useRouterState({
     select(state) {
       return state.location.pathname
@@ -86,27 +99,29 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    size={'lg'}
-                    className="text-2xl "
-                    isActive={state === item.url}
-                  >
-                    <Link to={item.url} className="gap-3 justify-stretch">
-                      <item.icon
-                        style={{
-                          width: '24px',
-                          height: '24px',
-                          marginTop: '1px',
-                        }}
-                      />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {(authState.user.isMainAdmin ? items : items.slice(0, -1)).map(
+                (item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      size={'lg'}
+                      className="text-2xl "
+                      isActive={state === item.url}
+                    >
+                      <Link to={item.url} className="gap-3 justify-stretch">
+                        <item.icon
+                          style={{
+                            width: '24px',
+                            height: '24px',
+                            marginTop: '1px',
+                          }}
+                        />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ),
+              )}
 
               <SidebarMenuItem key={'exit'}>
                 <SidebarMenuButton asChild size={'lg'} className="text-2xl ">

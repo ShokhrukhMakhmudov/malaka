@@ -15,12 +15,13 @@ datasource db {
 }
 
 model SuperAdmin {
-  id        String   @id @default(uuid())
-  login     String   @unique
-  password  String // Будем хранить хешированный пароль
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(uuid())
+  login       String   @unique
+  password    String // Будем хранить хешированный пароль
+  name        String?
+  isMainAdmin Boolean  @default(false) // Указывает, является ли этот superAdmin главным администратором
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Добавляем индексы для оптимизации
   @@index([login])
@@ -99,4 +100,19 @@ model CertificateCounter {
   updatedAt   DateTime @updatedAt
 
   @@map("certificate_counters")
+}
+
+model LoginHistory {
+  id            String   @id @default(uuid())
+  userId        String   // ID пользователя или superAdmin
+  login         String
+  name          String?
+  userType      String   // "superAdmin" или "user"
+  isMainAdmin   Boolean  @default(false)
+  loginTime     DateTime @default(now())
+  ipAddress     String?
+
+  @@index([userId])
+  @@index([loginTime])
+  @@map("login_history")
 }

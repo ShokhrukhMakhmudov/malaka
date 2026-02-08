@@ -5,6 +5,9 @@ export function useCourses() {
 
   // Получение всех курсов
   const { data: courses, isLoading } = trpc.course.getAll.useQuery(undefined, {
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0,
     throwOnError(_, query) {
       if (query.state.error?.data?.httpStatus === 401) {
         window.location.href = '/'

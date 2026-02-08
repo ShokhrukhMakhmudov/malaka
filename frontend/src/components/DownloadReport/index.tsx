@@ -64,9 +64,9 @@ export default function DownloadReportButton() {
     }
   }
 
-  // Генерируем список лет (последние 5 лет)
-  const currentYear = new Date().getFullYear()
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - i)
+  // Получаем доступные годы с бэкенда
+  const { data: years = [], isLoading } =
+    trpc.dashboard.getAvailableYears.useQuery()
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -87,6 +87,7 @@ export default function DownloadReportButton() {
             <Select
               value={year.toString()}
               onValueChange={(value) => setYear(parseInt(value))}
+              disabled={isLoading}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Yilni tanlang" />

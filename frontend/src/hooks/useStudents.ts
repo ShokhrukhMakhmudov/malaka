@@ -28,7 +28,9 @@ export function useStudents(options?: {
     refetch,
   } = trpc.student.getAll.useQuery(query, {
     enabled: true,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0,
     throwOnError(_, query) {
       if (query.state.error?.data?.httpStatus === 401) {
         window.location.href = '/'
@@ -46,7 +48,9 @@ export function useStudents(options?: {
       },
       {
         enabled: true,
-        refetchOnWindowFocus: false,
+        refetchOnWindowFocus: true,
+        refetchOnMount: true,
+        staleTime: 0,
       },
     )
 

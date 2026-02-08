@@ -7,6 +7,7 @@ interface TokenPayload {
   id: string;
   login: string;
   isSuperAdmin: boolean;
+  isMainAdmin?: boolean;
   roles?: string[]; // Добавляем массив ролей
 }
 

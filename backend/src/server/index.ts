@@ -45,12 +45,36 @@ app.use(
   createExpressMiddleware({
     router: appRouter,
     createContext,
-  })
+  }),
 );
 
 app.post("/api/login", express.json(), async (req, res) => {
   try {
     const { login, password } = req.body;
+
+    // Получаем IP-адрес клиента
+    const xForwardedFor = req.headers["x-forwarded-for"];
+    const socketAddress = req.socket.remoteAddress;
+    const realIp = req.headers["x-real-ip"];
+
+    console.log("🌐 IP Detection:", {
+      xForwardedFor,
+      socketAddress,
+      realIp,
+    });
+
+    let ipAddress =
+      (xForwardedFor as string)?.split(",")[0]?.trim() ||
+      (realIp as string) ||
+      socketAddress ||
+      null;
+
+    // Очищаем IPv6 localhost
+    if (ipAddress === "::1" || ipAddress === "::ffff:127.0.0.1") {
+      ipAddress = "127.0.0.1";
+    }
+
+    console.log("📍 Final IP:", ipAddress);
 
     // 1. Сначала проверяем супер-админа
     const admin = await prisma.superAdmin.findUnique({
@@ -63,10 +87,36 @@ app.post("/api/login", express.json(), async (req, res) => {
         return res.status(401).json({ error: "Parol yoki login noto'g'ri!" });
       }
 
+      // Записываем вход в историю
+      try {
+        await prisma.loginHistory.create({
+          data: {
+            userId: admin.id,
+            login: admin.login,
+            name: admin.name,
+            userType: "superAdmin",
+            isMainAdmin: admin.isMainAdmin,
+            ipAddress,
+          },
+        });
+        console.log(
+          "✅ Login history recorded for superAdmin:",
+          admin.login,
+          "from IP:",
+          ipAddress,
+        );
+      } catch (error) {
+        console.error(
+          "❌ Error recording login history for superAdmin:",
+          error,
+        );
+      }
+
       const token = generateToken({
         id: admin.id,
         login: admin.login,
         isSuperAdmin: true,
+        isMainAdmin: admin.isMainAdmin,
       });
 
       return res.json({
@@ -76,6 +126,7 @@ app.post("/api/login", express.json(), async (req, res) => {
           login: admin.login,
           name: admin.name,
           isSuperAdmin: true,
+          isMainAdmin: admin.isMainAdmin,
         },
       });
     }
@@ -93,6 +144,28 @@ app.post("/api/login", express.json(), async (req, res) => {
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       return res.status(401).json({ error: "Parol yoki login noto'g'ri!" });
+    }
+
+    // Записываем вход в историю
+    try {
+      await prisma.loginHistory.create({
+        data: {
+          userId: user.id,
+          login: user.login,
+          name: user.name,
+          userType: "user",
+          isMainAdmin: false,
+          ipAddress,
+        },
+      });
+      console.log(
+        "✅ Login history recorded for user:",
+        user.login,
+        "from IP:",
+        ipAddress,
+      );
+    } catch (error) {
+      console.error("❌ Error recording login history for user:", error);
     }
 
     const token = generateToken({
@@ -157,7 +230,7 @@ app.post("/api/students/import", async (req, res) => {
         if (existingStudent) {
           // Проверяем, есть ли уже связь с этим курсом
           const hasCourse = existingStudent.courses.some(
-            (sc: StudentCourse) => sc.courseId === courseId
+            (sc: StudentCourse) => sc.courseId === courseId,
           );
 
           if (hasCourse) {
@@ -299,7 +372,7 @@ app.post("/certificate/generate", async (req, res) => {
 
       // Удаляем этот номер из массива свободных
       const updatedFreeNumbers = counter.freeNumbers.filter(
-        (num) => num !== nextCount
+        (num) => num !== nextCount,
       );
 
       // Обновляем счетчик
@@ -361,11 +434,11 @@ app.post("/certificate/generate", async (req, res) => {
     const fontPath = path.join(__dirname, "../fonts/TimesNewRomanMTStd.ttf");
     const fontItalicPath = path.join(
       __dirname,
-      "../fonts/TimesNewRomanMTStd-Italic.ttf"
+      "../fonts/TimesNewRomanMTStd-Italic.ttf",
     );
     const fontBoldPath = path.join(
       __dirname,
-      "../fonts/TimesNewRomanMTStd-Bold.ttf"
+      "../fonts/TimesNewRomanMTStd-Bold.ttf",
     );
 
     if (!fs.existsSync(fontPath) || !fs.existsSync(fontBoldPath)) {
@@ -389,7 +462,7 @@ app.post("/certificate/generate", async (req, res) => {
       x: "center" | number,
       y: number,
       size = 12,
-      font = fontReg
+      font = fontReg,
     ) => {
       let xPos = x;
       if (x === "center") {
@@ -412,7 +485,7 @@ app.post("/certificate/generate", async (req, res) => {
       TEMPLATE_COORDINATES.fullName.x,
       TEMPLATE_COORDINATES.fullName.y,
       18,
-      fontBold
+      fontBold,
     );
 
     const CourseName = `${studentCourse.course.name.includes("Boshlang'ich") ? "Boshlang'ich kasbiy tayyorgarlik" : studentCourse.course.name.includes("Qayta tayyorlash") ? "Qayta tayyorlash" : "Malaka oshirish"} haqida`;
@@ -423,7 +496,7 @@ app.post("/certificate/generate", async (req, res) => {
       title || CourseName,
       TEMPLATE_COORDINATES.courseName.x,
       TEMPLATE_COORDINATES.courseName.y,
-      18
+      18,
     );
 
     // Серийный номер сертификата
@@ -432,7 +505,7 @@ app.post("/certificate/generate", async (req, res) => {
       TEMPLATE_COORDINATES.certificateSeries.x,
       TEMPLATE_COORDINATES.certificateSeries.y,
       13,
-      fontBold
+      fontBold,
     );
 
     // Номер сертификата
@@ -441,7 +514,7 @@ app.post("/certificate/generate", async (req, res) => {
       TEMPLATE_COORDINATES.certificateNumber.x,
       TEMPLATE_COORDINATES.certificateNumber.y,
       10,
-      fontRegItalic
+      fontRegItalic,
     );
 
     // Описание
@@ -463,7 +536,7 @@ app.post("/certificate/generate", async (req, res) => {
         TEMPLATE_COORDINATES.description.x,
         TEMPLATE_COORDINATES.description.y - 30 * index,
         16,
-        font
+        font,
       );
     });
 
@@ -473,7 +546,7 @@ app.post("/certificate/generate", async (req, res) => {
       TEMPLATE_COORDINATES.date.x,
       TEMPLATE_COORDINATES.date.y,
       11,
-      fontRegItalic
+      fontRegItalic,
     );
 
     // Генерация QR-кода
@@ -493,7 +566,7 @@ app.post("/certificate/generate", async (req, res) => {
     const pdfBytes = await pdfDoc.save();
     const outputDir = path.join(
       __dirname,
-      "../../../frontend/dist/certificates"
+      "../../../frontend/dist/certificates",
     );
 
     if (!fs.existsSync(outputDir)) {
@@ -683,7 +756,7 @@ async function generateCertificate({
 
       // Удаляем этот номер из массива свободных
       const updatedFreeNumbers = counter.freeNumbers.filter(
-        (num) => num !== nextCount
+        (num) => num !== nextCount,
       );
 
       // Обновляем счетчик
@@ -758,7 +831,7 @@ async function generateCertificate({
       x: "center" | number,
       y: number,
       size = 12,
-      font = fontReg
+      font = fontReg,
     ) => {
       let xPos = x;
       if (x === "center") {
@@ -781,7 +854,7 @@ async function generateCertificate({
       TEMPLATE_COORDINATES.fullName.x,
       TEMPLATE_COORDINATES.fullName.y,
       18,
-      fontBold
+      fontBold,
     );
 
     const CourseName = `${studentCourse.course.name.includes("Boshlang'ich") ? "Boshlang'ich kasbiy tayyorgarlik" : studentCourse.course.name.includes("Qayta tayyorlash") ? "Qayta tayyorlash" : "Malaka oshirish"} haqida`;
@@ -791,7 +864,7 @@ async function generateCertificate({
       title || CourseName,
       TEMPLATE_COORDINATES.courseName.x,
       TEMPLATE_COORDINATES.courseName.y,
-      18
+      18,
     );
 
     // Серийный номер сертификата
@@ -800,7 +873,7 @@ async function generateCertificate({
       TEMPLATE_COORDINATES.certificateSeries.x,
       TEMPLATE_COORDINATES.certificateSeries.y,
       13,
-      fontBold
+      fontBold,
     );
 
     // Номер сертификата
@@ -809,7 +882,7 @@ async function generateCertificate({
       TEMPLATE_COORDINATES.certificateNumber.x,
       TEMPLATE_COORDINATES.certificateNumber.y,
       10,
-      fontRegItalic
+      fontRegItalic,
     );
 
     // Описание
@@ -831,7 +904,7 @@ async function generateCertificate({
         TEMPLATE_COORDINATES.description.x,
         TEMPLATE_COORDINATES.description.y - 30 * index,
         16,
-        font
+        font,
       );
     });
 
@@ -841,7 +914,7 @@ async function generateCertificate({
       TEMPLATE_COORDINATES.date.x,
       TEMPLATE_COORDINATES.date.y,
       11,
-      fontRegItalic
+      fontRegItalic,
     );
 
     // Генерация QR-кода
@@ -861,7 +934,7 @@ async function generateCertificate({
     const pdfBytes = await pdfDoc.save();
     const outputDir = path.join(
       __dirname,
-      "../../../frontend/dist/certificates"
+      "../../../frontend/dist/certificates",
     );
 
     if (!fs.existsSync(outputDir)) {
@@ -917,6 +990,7 @@ async function initializeFirstAdmin() {
         login: defaultLogin,
         password: hashedPassword,
         name: defaultName,
+        isMainAdmin: true,
       },
     });
 

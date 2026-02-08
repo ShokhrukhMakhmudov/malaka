@@ -30,6 +30,7 @@ export default function CreateStudentDialog({
   const [studentCourses, setStudentCourses] = useState<any[]>([
     {
       courseId: '',
+      department: '',
       examResult: false,
       certificateNumber: '',
       certificateUrl: '',
@@ -45,6 +46,7 @@ export default function CreateStudentDialog({
       ...studentCourses,
       {
         courseId: '',
+        department: '',
         examResult: false,
         certificateNumber: '',
         certificateUrl: '',
@@ -75,6 +77,7 @@ export default function CreateStudentDialog({
         passport,
         rank: rank || '',
         phone: phone || '',
+        courses: studentCourses,
       })
 
       toast("Tinglovchi muvaffaqiyatli qo'shildi!", {
@@ -99,6 +102,7 @@ export default function CreateStudentDialog({
       setStudentCourses([
         {
           courseId: '',
+          department: '',
           examResult: false,
           certificateNumber: '',
           certificateUrl: '',

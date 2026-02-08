@@ -4,11 +4,13 @@ import prisma from "../prisma";
 import { Prisma } from "@prisma/client";
 // Схема для связи студент-курс
 const StudentCourseInput = z.object({
+  id: z.string().uuid().optional(), // ID для существующих курсов
   courseId: z.string().uuid(),
   examResult: z.boolean().optional().default(false),
   department: z.string(),
   certificateNumber: z.string().optional().nullable(),
   certificateUrl: z.string().optional().nullable(),
+  createdAt: z.string().optional(), // Сохраняем дату создания
 });
 
 const CreateStudentInput = z.object({
@@ -240,31 +242,77 @@ export const studentRouter = router({
     .mutation(async ({ input }) => {
       const { id, courses, ...data } = input;
 
-      // Удаляем существующие связи
-      await prisma.studentCourse.deleteMany({
-        where: { studentId: id },
-      });
+      return prisma.$transaction(async (tx) => {
+        // Получаем существующие курсы студента
+        const existingCourses = await tx.studentCourse.findMany({
+          where: { studentId: id },
+        });
 
-      return prisma.student.update({
-        where: { id },
-        data: {
-          ...data,
-          courses: {
-            create:
-              courses?.map((course) => ({
+        const existingCourseIds = existingCourses.map((c) => c.id);
+        const inputCourseIds = courses
+          ?.filter((c) => c.id)
+          .map((c) => c.id!) || [];
+
+        // Удаляем курсы, которых нет в новом списке
+        const coursesToDelete = existingCourseIds.filter(
+          (cId) => !inputCourseIds.includes(cId)
+        );
+
+        if (coursesToDelete.length > 0) {
+          await tx.studentCourse.deleteMany({
+            where: { id: { in: coursesToDelete } },
+          });
+        }
+
+        // Обрабатываем курсы из input
+        if (courses && courses.length > 0) {
+          for (const course of courses) {
+            if (course.id) {
+              // Обновляем существующий курс, сохраняя createdAt
+              const updateData: any = {
                 courseId: course.courseId,
                 examResult: course.examResult,
                 department: course.department,
                 certificateNumber: course.certificateNumber,
                 certificateUrl: course.certificateUrl,
-              })) || [],
+              };
+
+              // Если передан createdAt, используем его
+              if (course.createdAt) {
+                updateData.createdAt = new Date(course.createdAt);
+              }
+
+              await tx.studentCourse.update({
+                where: { id: course.id },
+                data: updateData,
+              });
+            } else {
+              // Создаем новый курс
+              await tx.studentCourse.create({
+                data: {
+                  studentId: id,
+                  courseId: course.courseId,
+                  examResult: course.examResult,
+                  department: course.department,
+                  certificateNumber: course.certificateNumber,
+                  certificateUrl: course.certificateUrl,
+                  // createdAt установится автоматически
+                },
+              });
+            }
+          }
+        }
+
+        // Обновляем данные студента
+        return tx.student.update({
+          where: { id },
+          data,
+          include: {
+            courses: {
+              include: { course: true },
+            },
           },
-        },
-        include: {
-          courses: {
-            include: { course: true },
-          },
-        },
+        });
       });
     }),
 

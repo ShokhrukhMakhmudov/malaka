@@ -3,6 +3,13 @@ import { trpc } from '@/utils/trpc'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   BarChart,
   Bar,
   XAxis,
@@ -14,6 +21,7 @@ import {
 } from 'recharts'
 import { Users, BookOpen, CheckCircle } from 'lucide-react'
 import DownloadReportButton from '@/components/DownloadReport'
+import { useState } from 'react'
 // import { Badge } from '@/components/ui/badge'
 
 export const Route = createFileRoute('/dashboard/')({
@@ -21,15 +29,47 @@ export const Route = createFileRoute('/dashboard/')({
 })
 
 export default function DashboardPage() {
+  const [selectedYear, setSelectedYear] = useState<number>(
+    new Date().getFullYear()
+  )
+
   // Запросы данных
+  const { data: availableYears, isLoading: isYearsLoading } =
+    trpc.dashboard.getAvailableYears.useQuery(undefined, {
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      staleTime: 0,
+    })
+
   const { data: studentCount, isLoading: isCountLoading } =
-    trpc.dashboard.getStudentCount.useQuery({ year: new Date().getFullYear() })
+    trpc.dashboard.getStudentCount.useQuery(
+      { year: selectedYear },
+      {
+        refetchOnWindowFocus: true,
+        refetchOnMount: true,
+        staleTime: 0,
+      }
+    )
   const { data: yearlyStatsData, isLoading: isYearlyStatsLoading } =
-    trpc.dashboard.getCourseYearlyStats.useQuery()
+    trpc.dashboard.getCourseYearlyStats.useQuery(
+      { year: selectedYear },
+      {
+        refetchOnWindowFocus: true,
+        refetchOnMount: true,
+        staleTime: 0,
+      }
+    )
   // const { data: recentStudents, isLoading: isRecentLoading } =
   //   trpc.dashboard.getRecentStudents.useQuery()
   const { data: examStats, isLoading: isExamLoading } =
-    trpc.dashboard.getExamStats.useQuery()
+    trpc.dashboard.getExamStats.useQuery(
+      { year: selectedYear },
+      {
+        refetchOnWindowFocus: true,
+        refetchOnMount: true,
+        staleTime: 0,
+      }
+    )
 
   return (
     <div className="container mx-auto py-8">
@@ -37,7 +77,31 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
           Statistika
         </h1>
-        <DownloadReportButton />
+        <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Yil:</span>
+            {isYearsLoading ? (
+              <Skeleton className="h-10 w-32" />
+            ) : (
+              <Select
+                value={selectedYear.toString()}
+                onValueChange={(value) => setSelectedYear(Number(value))}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Yilni tanlang" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableYears?.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+          <DownloadReportButton />
+        </div>
       </div>
 
       {/* Карточки с ключевыми метриками */}
@@ -129,22 +193,22 @@ export default function DashboardPage() {
                   {/* Группировка столбцов по году */}
                   <Bar
                     dataKey="previousYear.total"
-                    name="O'tgan yil: Jami"
+                    name={`${selectedYear - 1}: Jami`}
                     fill="#8884d8"
                   />
                   <Bar
                     dataKey="previousYear.passed"
-                    name="O'tgan yil: O'tganlar"
+                    name={`${selectedYear - 1}: O'tganlar`}
                     fill="#82ca9d"
                   />
                   <Bar
                     dataKey="currentYear.total"
-                    name="Joriy yil: Jami"
+                    name={`${selectedYear}: Jami`}
                     fill="#ffc658"
                   />
                   <Bar
                     dataKey="currentYear.passed"
-                    name="Joriy yil: O'tganlar"
+                    name={`${selectedYear}: O'tganlar`}
                     fill="#ff7300"
                   />
                 </BarChart>

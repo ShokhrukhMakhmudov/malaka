@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { regions } from '@/utils/data'
 
 export default function StudentCourseForm({
   courses,
@@ -37,23 +38,43 @@ export default function StudentCourseForm({
         <Trash2 className="h-4 w-4 text-destructive" />
       </Button>
 
-      <div className="mb-4">
-        <Label className="mb-2">Kurs *</Label>
-        <Select
-          value={studentCourse.courseId || ''}
-          onValueChange={(value) => handleChange('courseId', value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Kursni tanlang" />
-          </SelectTrigger>
-          <SelectContent>
-            {courses.map((course) => (
-              <SelectItem key={course.id} value={course.id}>
-                {course.name} ({course.prefix})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="mb-4">
+          <Label className="mb-2">Kurs *</Label>
+          <Select
+            value={studentCourse.courseId || ''}
+            onValueChange={(value) => handleChange('courseId', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Kursni tanlang" />
+            </SelectTrigger>
+            <SelectContent>
+              {courses.map((course) => (
+                <SelectItem key={course.id} value={course.id}>
+                  {course.name} ({course.prefix})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="mb-4">
+          <Label className="mb-2">Hudud *</Label>
+          <Select
+            value={studentCourse.department || ''}
+            onValueChange={(value) => handleChange('department', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Hududni tanlang" />
+            </SelectTrigger>
+            <SelectContent>
+              {regions.map((region) => (
+                <SelectItem key={region} value={region}>
+                  {region}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -66,26 +87,16 @@ export default function StudentCourseForm({
             className="text-sm"
           />
         </div>
-
-        <div>
-          <Label className="mb-2">Sertifikat URL</Label>
-          <Input
-            value={studentCourse.certificateUrl || ''}
-            onChange={(e) => handleChange('certificateUrl', e.target.value)}
-            placeholder="https://..."
+        <div className="flex items-center">
+          <Checkbox
+            id={`exam-passed-${studentCourse.id}`}
+            checked={studentCourse.examResult || false}
+            onCheckedChange={(checked) => handleChange('examResult', checked)}
           />
+          <Label htmlFor={`exam-passed-${studentCourse.id}`} className="ml-2">
+            Imtihon topshirdi (belgilang agar o'tgan bo'lsa)
+          </Label>
         </div>
-      </div>
-
-      <div className="flex items-center mt-4">
-        <Checkbox
-          id={`exam-passed-${studentCourse.id}`}
-          checked={studentCourse.examResult || false}
-          onCheckedChange={(checked) => handleChange('examResult', checked)}
-        />
-        <Label htmlFor={`exam-passed-${studentCourse.id}`} className="ml-2">
-          Imtihon natijasi ( Natija qoniqarli bo'lsa <Checkbox checked />)
-        </Label>
       </div>
     </div>
   )

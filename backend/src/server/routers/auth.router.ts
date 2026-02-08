@@ -19,7 +19,7 @@ export const authRouter = router({
         login: z.string().min(3),
         password: z.string().min(8),
         name: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ input }) => {
       // Проверяем, есть ли уже супер-админы
@@ -35,6 +35,7 @@ export const authRouter = router({
           login: input.login,
           password: hashedPassword,
           name: input.name,
+          isMainAdmin: true, // Первый superAdmin всегда главный
         },
       });
 
@@ -42,7 +43,169 @@ export const authRouter = router({
         id: admin.id,
         login: admin.login,
         name: admin.name,
+        isMainAdmin: admin.isMainAdmin,
       };
+    }),
+
+  // Получение списка супер-админов (только для главного superAdmin)
+  listSuperAdmins: protectedProcedure.query(async ({ ctx }) => {
+    // Проверяем, что пользователь - superAdmin
+    if (!ctx.user?.isSuperAdmin) {
+      throw new Error("Only super admins can list super admins");
+    }
+
+    // Получаем информацию о текущем superAdmin
+    const currentAdmin = await prisma.superAdmin.findUnique({
+      where: { id: ctx.user.id },
+    });
+
+    // Проверяем, что текущий superAdmin является главным
+    if (!currentAdmin?.isMainAdmin) {
+      throw new Error("Only main super admin can list super admins");
+    }
+
+    return await prisma.superAdmin.findMany({
+      select: {
+        id: true,
+        login: true,
+        name: true,
+        isMainAdmin: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: [{ isMainAdmin: "desc" }, { createdAt: "asc" }],
+    });
+  }),
+
+  // Создание нового супер-админа (только для главного superAdmin)
+  createSuperAdminByMain: protectedProcedure
+    .input(
+      z.object({
+        login: z.string().min(3),
+        password: z.string().min(8),
+        name: z.string().optional(),
+        isMainAdmin: z.boolean().default(false),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      // Проверяем, что пользователь - superAdmin
+      if (!ctx.user?.isSuperAdmin) {
+        throw new Error("Only super admins can create super admins");
+      }
+
+      // Получаем информацию о текущем superAdmin
+      const currentAdmin = await prisma.superAdmin.findUnique({
+        where: { id: ctx.user.id },
+      });
+
+      // Проверяем, что текущий superAdmin является главным
+      if (!currentAdmin?.isMainAdmin) {
+        throw new Error("Only main super admin can create super admins");
+      }
+
+      const hashedPassword = await bcrypt.hash(input.password, 10);
+
+      const admin = await prisma.superAdmin.create({
+        data: {
+          login: input.login,
+          password: hashedPassword,
+          name: input.name,
+          isMainAdmin: input.isMainAdmin,
+        },
+      });
+
+      return {
+        id: admin.id,
+        login: admin.login,
+        name: admin.name,
+        isMainAdmin: admin.isMainAdmin,
+      };
+    }),
+
+  // Обновление супер-админа (только для главного superAdmin)
+  updateSuperAdmin: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        login: z.string().min(3).optional(),
+        name: z.string().optional(),
+        password: z.string().min(8).optional(),
+        isMainAdmin: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      // Проверяем, что пользователь - superAdmin
+      if (!ctx.user?.isSuperAdmin) {
+        throw new Error("Only super admins can update super admins");
+      }
+
+      // Получаем информацию о текущем superAdmin
+      const currentAdmin = await prisma.superAdmin.findUnique({
+        where: { id: ctx.user.id },
+      });
+
+      // Проверяем, что текущий superAdmin является главным
+      if (!currentAdmin?.isMainAdmin) {
+        throw new Error("Only main super admin can update super admins");
+      }
+
+      // Запрещаем superAdmin изменять свой статус isMainAdmin
+      if (input.id === ctx.user.id && input.isMainAdmin === false) {
+        throw new Error("Cannot remove main admin status from yourself");
+      }
+
+      const updateData: any = {};
+
+      if (input.name !== undefined) updateData.name = input.name;
+      if (input.login) updateData.login = input.login;
+      if (input.isMainAdmin !== undefined)
+        updateData.isMainAdmin = input.isMainAdmin;
+      if (input.password) {
+        updateData.password = await bcrypt.hash(input.password, 10);
+      }
+
+      const admin = await prisma.superAdmin.update({
+        where: { id: input.id },
+        data: updateData,
+      });
+
+      return {
+        id: admin.id,
+        login: admin.login,
+        name: admin.name,
+        isMainAdmin: admin.isMainAdmin,
+      };
+    }),
+
+  // Удаление супер-админа (только для главного superAdmin)
+  deleteSuperAdmin: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      // Проверяем, что пользователь - superAdmin
+      if (!ctx.user?.isSuperAdmin) {
+        throw new Error("Only super admins can delete super admins");
+      }
+
+      // Получаем информацию о текущем superAdmin
+      const currentAdmin = await prisma.superAdmin.findUnique({
+        where: { id: ctx.user.id },
+      });
+
+      // Проверяем, что текущий superAdmin является главным
+      if (!currentAdmin?.isMainAdmin) {
+        throw new Error("Only main super admin can delete super admins");
+      }
+
+      // Запрещаем superAdmin удалять самого себя
+      if (input.id === ctx.user.id) {
+        throw new Error("Cannot delete yourself");
+      }
+
+      await prisma.superAdmin.delete({
+        where: { id: input.id },
+      });
+
+      return { success: true };
     }),
 
   // Вход в систему для всех типов пользователей
@@ -51,9 +214,11 @@ export const authRouter = router({
       z.object({
         login: z.string(),
         password: z.string(),
-      })
+      }),
     )
     .mutation(async ({ input }) => {
+      console.log("🔑 LOGIN ATTEMPT for:", input.login);
+
       // Пробуем найти супер-админа
       const superAdmin = await prisma.superAdmin.findUnique({
         where: { login: input.login },
@@ -62,16 +227,39 @@ export const authRouter = router({
       if (superAdmin) {
         const passwordMatch = await bcrypt.compare(
           input.password,
-          superAdmin.password
+          superAdmin.password,
         );
         if (!passwordMatch) {
           throw new Error("Invalid credentials");
+        }
+
+        // Записываем вход в историю
+        try {
+          await prisma.loginHistory.create({
+            data: {
+              userId: superAdmin.id,
+              login: superAdmin.login,
+              name: superAdmin.name,
+              userType: "superAdmin",
+              isMainAdmin: superAdmin.isMainAdmin,
+            },
+          });
+          console.log(
+            "✅ Login history recorded for superAdmin:",
+            superAdmin.login,
+          );
+        } catch (error) {
+          console.error(
+            "❌ Error recording login history for superAdmin:",
+            error,
+          );
         }
 
         const token = generateToken({
           id: superAdmin.id,
           login: superAdmin.login,
           isSuperAdmin: true,
+          isMainAdmin: superAdmin.isMainAdmin,
         });
 
         return {
@@ -81,6 +269,7 @@ export const authRouter = router({
             login: superAdmin.login,
             name: superAdmin.name,
             isSuperAdmin: true,
+            isMainAdmin: superAdmin.isMainAdmin,
           },
         };
       }
@@ -97,6 +286,22 @@ export const authRouter = router({
       const passwordMatch = await bcrypt.compare(input.password, user.password);
       if (!passwordMatch) {
         throw new Error("Invalid credentials");
+      }
+
+      // Записываем вход в историю
+      try {
+        await prisma.loginHistory.create({
+          data: {
+            userId: user.id,
+            login: user.login,
+            name: user.name,
+            userType: "user",
+            isMainAdmin: false,
+          },
+        });
+        console.log("✅ Login history recorded for user:", user.login);
+      } catch (error) {
+        console.error("❌ Error recording login history for user:", error);
       }
 
       const token = generateToken({
@@ -126,7 +331,7 @@ export const authRouter = router({
         password: z.string().min(8),
         name: z.string().optional(),
         roles: Roles, // Принимаем массив ролей
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       // Проверка прав (только супер-админ)
@@ -162,7 +367,7 @@ export const authRouter = router({
         name: z.string().optional(),
         roles: Roles.optional(), // Опциональный массив ролей
         password: z.string().min(8).optional(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       // Проверка прав (только супер-админ)
@@ -233,6 +438,41 @@ export const authRouter = router({
     };
   }),
 
+  // Получение истории входов (только для superAdmin)
+  getLoginHistory: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(1000).default(100),
+        offset: z.number().min(0).default(0),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      // Проверяем, что пользователь - superAdmin
+      if (!ctx.user?.isSuperAdmin) {
+        throw new Error("Only super admins can view login history");
+      }
+
+      const { limit, offset } = input;
+
+      const [history, total] = await Promise.all([
+        prisma.loginHistory.findMany({
+          take: limit,
+          skip: offset,
+          orderBy: {
+            loginTime: "desc",
+          },
+        }),
+        prisma.loginHistory.count(),
+      ]);
+
+      return {
+        history,
+        total,
+        limit,
+        offset,
+      };
+    }),
+
   authWithToken: publicProcedure.query(async ({ ctx }) => {
     const token = ctx.req.headers.authorization?.split(" ")[1];
 
@@ -248,6 +488,7 @@ export const authRouter = router({
             id: true,
             login: true,
             name: true,
+            isMainAdmin: true,
           },
         });
 
@@ -258,6 +499,7 @@ export const authRouter = router({
           id: admin.id,
           login: admin.login,
           isSuperAdmin: true,
+          isMainAdmin: admin.isMainAdmin,
         });
 
         return {
@@ -266,6 +508,7 @@ export const authRouter = router({
           user: {
             ...admin,
             isSuperAdmin: true,
+            isMainAdmin: admin.isMainAdmin,
           },
         };
       }
@@ -289,7 +532,7 @@ export const authRouter = router({
         id: user.id,
         login: user.login,
         roles: user.roles,
-        isSuperAdmin: true,
+        isSuperAdmin: false,
       });
       return {
         success: true,
