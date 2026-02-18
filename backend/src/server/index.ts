@@ -34,6 +34,12 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
+// Статическая раздача сертификатов
+app.use(
+  "/certificates",
+  express.static(path.join(__dirname, "../../data/certificates")),
+);
+
 // test
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
@@ -327,270 +333,15 @@ app.post("/certificate/generate", async (req, res) => {
     const { studentCourseId, message, date, additionalMessage, title } =
       req.body;
 
-    // Получаем данные о курсе студента
-    const studentCourse = await prisma.studentCourse.findUnique({
-      where: { id: studentCourseId },
-      include: {
-        student: true,
-        course: true,
-      },
+    const result = await generateCertificate({
+      studentCourseId,
+      title: title || "",
+      message,
+      additionalMessage,
+      date,
     });
 
-    if (!studentCourse) {
-      return res.status(404).json({ message: "Student course not found" });
-    }
-
-    if (!studentCourse.examResult) {
-      return res.status(400).json({ message: "Student did not pass the exam" });
-    }
-
-    // Получаем или создаем счетчик для префикса курса
-    /*************  ✨ Windsurf Command 🌟  *************/
-    let counter = await prisma.certificateCounter.findUnique({
-      where: { prefix: studentCourse.course.prefix },
-    });
-    /*******  fc20292a-e696-41e8-a2f7-416ec1daa068  *******/
-
-    if (!counter) {
-      counter = await prisma.certificateCounter.create({
-        data: {
-          prefix: studentCourse.course.prefix,
-          lastCount: 0,
-        },
-      });
-    }
-
-    // Генерируем новый номер сертификата
-    let certificateNumber;
-    let nextCount: number = 0;
-
-    if (studentCourse.certificateNumber) {
-      certificateNumber = studentCourse.certificateNumber.slice(3);
-    } else if (counter.freeNumbers && counter.freeNumbers.length > 0) {
-      // Берем минимальный свободный номер
-      nextCount = Math.min(...counter.freeNumbers);
-
-      // Удаляем этот номер из массива свободных
-      const updatedFreeNumbers = counter.freeNumbers.filter(
-        (num) => num !== nextCount,
-      );
-
-      // Обновляем счетчик
-      await prisma.certificateCounter.update({
-        where: { prefix: studentCourse.course.prefix },
-        data: {
-          freeNumbers: updatedFreeNumbers,
-          // Обновляем lastCount если нужно
-          lastCount: Math.max(counter.lastCount, nextCount),
-        },
-      });
-
-      certificateNumber = nextCount.toString().padStart(5, "0");
-    } else {
-      // Используем старую логику - следующий номер
-      nextCount = counter.lastCount + 1;
-      certificateNumber = nextCount.toString().padStart(5, "0");
-
-      // Обновляем счетчик
-      await prisma.certificateCounter.update({
-        where: { prefix: studentCourse.course.prefix },
-        data: { lastCount: nextCount },
-      });
-    }
-
-    const certificateSeries = `${studentCourse.course.prefix} ${certificateNumber}`;
-
-    // Проверяем, не существует ли уже такого номера
-    const exists = await prisma.studentCourse.findFirst({
-      where: { certificateNumber: certificateSeries },
-    });
-
-    if (exists && studentCourse.certificateNumber !== certificateSeries) {
-      return res
-        .status(400)
-        .json({ message: "Certificate number already exists" });
-    }
-
-    if (!studentCourse.certificateNumber) {
-      // Обновляем счетчик
-      await prisma.certificateCounter.update({
-        where: { id: counter.id },
-        data: { lastCount: nextCount },
-      });
-    }
-
-    // Путь к шаблону PDF
-    const templatePath = path.join(__dirname, "../template/template.pdf");
-
-    if (!fs.existsSync(templatePath)) {
-      return res.status(500).json({ message: "PDF template not found" });
-    }
-
-    const templateBytes = fs.readFileSync(templatePath);
-    const pdfDoc = await PDFDocument.load(templateBytes);
-    pdfDoc.registerFontkit(fontKit);
-
-    // Путь к шрифтам
-    const fontPath = path.join(__dirname, "../fonts/TimesNewRomanMTStd.ttf");
-    const fontItalicPath = path.join(
-      __dirname,
-      "../fonts/TimesNewRomanMTStd-Italic.ttf",
-    );
-    const fontBoldPath = path.join(
-      __dirname,
-      "../fonts/TimesNewRomanMTStd-Bold.ttf",
-    );
-
-    if (!fs.existsSync(fontPath) || !fs.existsSync(fontBoldPath)) {
-      return res.status(500).json({ message: "Font files not found" });
-    }
-
-    const customFont = fs.readFileSync(fontPath);
-    const customFontBold = fs.readFileSync(fontBoldPath);
-    const customFontItalic = fs.readFileSync(fontItalicPath);
-    const fontReg = await pdfDoc.embedFont(customFont);
-    const fontRegItalic = await pdfDoc.embedFont(customFontItalic);
-    const fontBold = await pdfDoc.embedFont(customFontBold);
-
-    // Получаем первую страницу
-    const pages = pdfDoc.getPages();
-    const page = pages[0];
-
-    // Добавляем текст
-    const addText = (
-      text: string,
-      x: "center" | number,
-      y: number,
-      size = 12,
-      font = fontReg,
-    ) => {
-      let xPos = x;
-      if (x === "center") {
-        const textWidth = font.widthOfTextAtSize(text, size);
-        xPos = 50 + (page.getWidth() - textWidth) / 2;
-      }
-
-      page.drawText(text, {
-        x: xPos as number,
-        y, // Инвертируем Y-координату
-        size,
-        font,
-        color: rgb(0, 0, 0),
-      });
-    };
-
-    // ФИО студента
-    addText(
-      studentCourse.student.fullName.toUpperCase(),
-      TEMPLATE_COORDINATES.fullName.x,
-      TEMPLATE_COORDINATES.fullName.y,
-      18,
-      fontBold,
-    );
-
-    const CourseName = `${studentCourse.course.name.includes("Boshlang'ich") ? "Boshlang'ich kasbiy tayyorgarlik" : studentCourse.course.name.includes("Qayta tayyorlash") ? "Qayta tayyorlash" : "Malaka oshirish"} haqida`;
-
-    // Название курса
-    addText(
-      // `${studentCourse.course.name} haqida`,
-      title || CourseName,
-      TEMPLATE_COORDINATES.courseName.x,
-      TEMPLATE_COORDINATES.courseName.y,
-      18,
-    );
-
-    // Серийный номер сертификата
-    addText(
-      certificateSeries,
-      TEMPLATE_COORDINATES.certificateSeries.x,
-      TEMPLATE_COORDINATES.certificateSeries.y,
-      13,
-      fontBold,
-    );
-
-    // Номер сертификата
-    addText(
-      certificateNumber,
-      TEMPLATE_COORDINATES.certificateNumber.x,
-      TEMPLATE_COORDINATES.certificateNumber.y,
-      10,
-      fontRegItalic,
-    );
-
-    // Описание
-
-    // Разбиваем и фильтруем основное и дополнительное сообщение
-    const mainLines = splitAndClean(message);
-    const additionalLines = splitAndClean(additionalMessage);
-
-    const messageLines = [...mainLines, ...additionalLines];
-
-    // Индекс, начиная с которого текст должен быть жирным
-    const boldStartIndex = mainLines.length;
-
-    messageLines.forEach((line, index) => {
-      const font = index >= boldStartIndex ? fontBold : fontReg;
-
-      addText(
-        line,
-        TEMPLATE_COORDINATES.description.x,
-        TEMPLATE_COORDINATES.description.y - 30 * index,
-        16,
-        font,
-      );
-    });
-
-    // Дата выдачи
-    addText(
-      formatDate(date, "dd.MM.yyyy"),
-      TEMPLATE_COORDINATES.date.x,
-      TEMPLATE_COORDINATES.date.y,
-      11,
-      fontRegItalic,
-    );
-
-    // Генерация QR-кода
-    const qrUrl = `${process.env.BASE_URL}/certificates/${certificateSeries
-      .replace(/\s+/g, "")
-      .replace(/№/g, "")}.pdf`;
-    const qrImage = await QRCode.toBuffer(qrUrl);
-    const embeddedQr = await pdfDoc.embedPng(qrImage);
-    page.drawImage(embeddedQr, {
-      x: TEMPLATE_COORDINATES.qrCode.x as number,
-      y: TEMPLATE_COORDINATES.qrCode.y,
-      width: TEMPLATE_COORDINATES.qrCode.size,
-      height: TEMPLATE_COORDINATES.qrCode.size,
-    });
-
-    // Сохранение PDF
-    const pdfBytes = await pdfDoc.save();
-    const outputDir = path.join(
-      __dirname,
-      "../../../frontend/dist/certificates",
-    );
-
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-
-    const fileName = `${certificateSeries.replace(/\s+/g, "").replace(/№/g, "")}.pdf`;
-    const outputPath = path.join(outputDir, fileName);
-    fs.writeFileSync(outputPath, pdfBytes);
-
-    // Обновление записи в БД
-    await prisma.studentCourse.update({
-      where: { id: studentCourseId },
-      data: {
-        certificateNumber: certificateSeries,
-        certificateUrl: `/certificates/${fileName}`,
-        createdAt: date ? new Date(date) : new Date(),
-      },
-    });
-
-    return res.status(200).json({
-      success: true,
-      certificateUrl: `/certificates/${fileName}`,
-    });
+    return res.status(200).json(result);
   } catch (error) {
     console.error("Certificate generation error:", error);
     let message = error;
@@ -696,7 +447,6 @@ app.post("/api/student", async (req, res) => {
   }
 });
 
-// Функция генерации сертификата (аналогичная вашему роуту /certificate/generate)
 async function generateCertificate({
   studentCourseId,
   title,
@@ -710,268 +460,257 @@ async function generateCertificate({
   additionalMessage: string;
   date: string;
 }) {
-  try {
-    // Получаем данные о курсе студента
-    const studentCourse = await prisma.studentCourse.findUnique({
-      where: { id: studentCourseId },
-      include: {
-        student: true,
-        course: true,
-      },
-    });
+  // Получаем данные о курсе студента
+  const studentCourse = await prisma.studentCourse.findUnique({
+    where: { id: studentCourseId },
+    include: {
+      student: true,
+      course: true,
+    },
+  });
 
-    if (!studentCourse) {
-      throw new Error("Student course not found");
-    }
-
-    if (!studentCourse.examResult) {
-      throw new Error("Student did not pass the exam");
-    }
-
-    // Получаем или создаем счетчик для префикса курса
-    /*************  ✨ Windsurf Command 🌟  *************/
-    let counter = await prisma.certificateCounter.findUnique({
-      where: { prefix: studentCourse.course.prefix },
-    });
-    /*******  fc20292a-e696-41e8-a2f7-416ec1daa068  *******/
-
-    if (!counter) {
-      counter = await prisma.certificateCounter.create({
-        data: {
-          prefix: studentCourse.course.prefix,
-          lastCount: 0,
-        },
-      });
-    }
-
-    // Генерируем новый номер сертификата
-    let certificateNumber;
-    let nextCount: number;
-
-    if (studentCourse.certificateNumber) {
-      certificateNumber = studentCourse.certificateNumber.slice(3);
-    } else if (counter.freeNumbers && counter.freeNumbers.length > 0) {
-      // Берем минимальный свободный номер
-      nextCount = Math.min(...counter.freeNumbers);
-
-      // Удаляем этот номер из массива свободных
-      const updatedFreeNumbers = counter.freeNumbers.filter(
-        (num) => num !== nextCount,
-      );
-
-      // Обновляем счетчик
-      await prisma.certificateCounter.update({
-        where: { prefix: studentCourse.course.prefix },
-        data: {
-          freeNumbers: updatedFreeNumbers,
-          // Обновляем lastCount если нужно
-          lastCount: Math.max(counter.lastCount, nextCount),
-        },
-      });
-
-      certificateNumber = nextCount.toString().padStart(5, "0");
-    } else {
-      // Используем старую логику - следующий номер
-      nextCount = counter.lastCount + 1;
-      certificateNumber = nextCount.toString().padStart(5, "0");
-
-      // Обновляем счетчик
-      await prisma.certificateCounter.update({
-        where: { prefix: studentCourse.course.prefix },
-        data: { lastCount: nextCount },
-      });
-    }
-
-    const certificateSeries = `${studentCourse.course.prefix} ${certificateNumber}`;
-
-    // Проверяем, не существует ли уже такого номера
-    const exists = await prisma.studentCourse.findFirst({
-      where: { certificateNumber: certificateSeries },
-    });
-
-    if (exists && studentCourse.certificateNumber !== certificateSeries) {
-      throw new Error("Certificate number already exists");
-    }
-
-    if (!studentCourse.certificateNumber) {
-      const nextCount = counter.lastCount + 1;
-
-      // Обновляем счетчик
-      await prisma.certificateCounter.update({
-        where: { id: counter.id },
-        data: { lastCount: nextCount },
-      });
-    }
-    // Путь к шаблону PDF
-    const templatePath = path.join(__dirname, "../template/template.pdf");
-
-    const templateBytes = fs.readFileSync(templatePath);
-    const pdfDoc = await PDFDocument.load(templateBytes);
-    pdfDoc.registerFontkit(fontKit);
-
-    // Путь к шрифтам
-    const fontPath = path.join(__dirname, "../fonts/Roboto-Regular.ttf");
-    const fontItalicPath = path.join(__dirname, "../fonts/Roboto-Italic.ttf");
-    const fontBoldPath = path.join(__dirname, "../fonts/Roboto-Bold.ttf");
-
-    const customFont = fs.readFileSync(fontPath);
-    const customFontBold = fs.readFileSync(fontBoldPath);
-    const customFontItalic = fs.readFileSync(fontItalicPath);
-    const fontReg = await pdfDoc.embedFont(customFont);
-    const fontRegItalic = await pdfDoc.embedFont(customFontItalic);
-    const fontBold = await pdfDoc.embedFont(customFontBold);
-
-    // Получаем первую страницу
-    const pages = pdfDoc.getPages();
-    const page = pages[0];
-
-    // Добавляем текст
-    const addText = (
-      text: string,
-      x: "center" | number,
-      y: number,
-      size = 12,
-      font = fontReg,
-    ) => {
-      let xPos = x;
-      if (x === "center") {
-        const textWidth = font.widthOfTextAtSize(text, size);
-        xPos = 50 + (page.getWidth() - textWidth) / 2;
-      }
-
-      page.drawText(text, {
-        x: xPos as number,
-        y, // Инвертируем Y-координату
-        size,
-        font,
-        color: rgb(0, 0, 0),
-      });
-    };
-
-    // ФИО студента
-    addText(
-      studentCourse.student.fullName.toUpperCase(),
-      TEMPLATE_COORDINATES.fullName.x,
-      TEMPLATE_COORDINATES.fullName.y,
-      18,
-      fontBold,
-    );
-
-    const CourseName = `${studentCourse.course.name.includes("Boshlang'ich") ? "Boshlang'ich kasbiy tayyorgarlik" : studentCourse.course.name.includes("Qayta tayyorlash") ? "Qayta tayyorlash" : "Malaka oshirish"} haqida`;
-
-    // Название курса
-    addText(
-      title || CourseName,
-      TEMPLATE_COORDINATES.courseName.x,
-      TEMPLATE_COORDINATES.courseName.y,
-      18,
-    );
-
-    // Серийный номер сертификата
-    addText(
-      certificateSeries,
-      TEMPLATE_COORDINATES.certificateSeries.x,
-      TEMPLATE_COORDINATES.certificateSeries.y,
-      13,
-      fontBold,
-    );
-
-    // Номер сертификата
-    addText(
-      certificateNumber,
-      TEMPLATE_COORDINATES.certificateNumber.x,
-      TEMPLATE_COORDINATES.certificateNumber.y,
-      10,
-      fontRegItalic,
-    );
-
-    // Описание
-
-    // Разбиваем и фильтруем основное и дополнительное сообщение
-    const mainLines = splitAndClean(message);
-    const additionalLines = splitAndClean(additionalMessage);
-
-    const messageLines = [...mainLines, ...additionalLines];
-
-    // Индекс, начиная с которого текст должен быть жирным
-    const boldStartIndex = mainLines.length;
-
-    messageLines.forEach((line, index) => {
-      const font = index >= boldStartIndex ? fontBold : fontReg;
-
-      addText(
-        line,
-        TEMPLATE_COORDINATES.description.x,
-        TEMPLATE_COORDINATES.description.y - 30 * index,
-        16,
-        font,
-      );
-    });
-
-    // Дата выдачи
-    addText(
-      formatDate(date, "dd.MM.yyyy"),
-      TEMPLATE_COORDINATES.date.x,
-      TEMPLATE_COORDINATES.date.y,
-      11,
-      fontRegItalic,
-    );
-
-    // Генерация QR-кода
-    const qrUrl = `${process.env.BASE_URL}/certificates/${certificateSeries
-      .replace(/\s+/g, "")
-      .replace(/№/g, "")}.pdf`;
-    const qrImage = await QRCode.toBuffer(qrUrl);
-    const embeddedQr = await pdfDoc.embedPng(qrImage);
-    page.drawImage(embeddedQr, {
-      x: TEMPLATE_COORDINATES.qrCode.x as number,
-      y: TEMPLATE_COORDINATES.qrCode.y,
-      width: TEMPLATE_COORDINATES.qrCode.size,
-      height: TEMPLATE_COORDINATES.qrCode.size,
-    });
-
-    // Сохранение PDF
-    const pdfBytes = await pdfDoc.save();
-    const outputDir = path.join(
-      __dirname,
-      "../../../frontend/dist/certificates",
-    );
-
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-
-    const fileName = `${certificateSeries.replace(/\s+/g, "").replace(/№/g, "")}.pdf`;
-    const outputPath = path.join(outputDir, fileName);
-    fs.writeFileSync(outputPath, pdfBytes);
-
-    // Обновление записи в БД
-    await prisma.studentCourse.update({
-      where: { id: studentCourseId },
-      data: {
-        certificateNumber: certificateSeries,
-        certificateUrl: `/certificates/${fileName}`,
-      },
-    });
-
-    // Возвращаем информацию о сертификате
-    return {
-      success: true,
-      certificateUrl: `/certificates/${fileName}`,
-      certificateNumber: certificateSeries,
-    };
-  } catch (error) {
-    console.error("Certificate generation error:", error);
-    let message = error;
-    if (error instanceof Error) {
-      message = error.message || "Certificate generation failed";
-    }
-
-    return {
-      success: false,
-      error: message || "Certificate generation failed",
-    };
+  if (!studentCourse) {
+    throw new Error("Student course not found");
   }
+
+  if (!studentCourse.examResult) {
+    throw new Error("Student did not pass the exam");
+  }
+
+  // Получаем или создаем счетчик для префикса курса
+  let counter = await prisma.certificateCounter.findUnique({
+    where: { prefix: studentCourse.course.prefix },
+  });
+
+  if (!counter) {
+    counter = await prisma.certificateCounter.create({
+      data: {
+        prefix: studentCourse.course.prefix,
+        lastCount: 0,
+      },
+    });
+  }
+
+  // Генерируем новый номер сертификата
+  let certificateNumber;
+  let nextCount: number = 0;
+
+  if (studentCourse.certificateNumber) {
+    const parts = studentCourse.certificateNumber.split(" ");
+    certificateNumber = parts[parts.length - 1];
+  } else if (counter.freeNumbers && counter.freeNumbers.length > 0) {
+    // Берем минимальный свободный номер
+    nextCount = Math.min(...counter.freeNumbers);
+
+    // Удаляем этот номер из массива свободных
+    const updatedFreeNumbers = counter.freeNumbers.filter(
+      (num) => num !== nextCount,
+    );
+
+    // Обновляем счетчик
+    await prisma.certificateCounter.update({
+      where: { prefix: studentCourse.course.prefix },
+      data: {
+        freeNumbers: updatedFreeNumbers,
+        lastCount: Math.max(counter.lastCount, nextCount),
+      },
+    });
+
+    certificateNumber = nextCount.toString().padStart(5, "0");
+  } else {
+    // Следующий номер
+    nextCount = counter.lastCount + 1;
+    certificateNumber = nextCount.toString().padStart(5, "0");
+
+    // Обновляем счетчик
+    await prisma.certificateCounter.update({
+      where: { prefix: studentCourse.course.prefix },
+      data: { lastCount: nextCount },
+    });
+  }
+
+  const certificateSeries = `${studentCourse.course.prefix} ${certificateNumber}`;
+
+  // Проверяем, не существует ли уже такого номера
+  const exists = await prisma.studentCourse.findFirst({
+    where: { certificateNumber: certificateSeries },
+  });
+
+  if (exists && studentCourse.certificateNumber !== certificateSeries) {
+    throw new Error("Certificate number already exists");
+  }
+
+  if (!studentCourse.certificateNumber) {
+    await prisma.certificateCounter.update({
+      where: { id: counter.id },
+      data: { lastCount: nextCount },
+    });
+  }
+
+  // Путь к шаблону PDF
+  const templatePath = path.join(__dirname, "../template/template.pdf");
+
+  if (!fs.existsSync(templatePath)) {
+    throw new Error("PDF template not found");
+  }
+
+  const templateBytes = fs.readFileSync(templatePath);
+  const pdfDoc = await PDFDocument.load(templateBytes);
+  pdfDoc.registerFontkit(fontKit);
+
+  // Путь к шрифтам
+  const fontPath = path.join(__dirname, "../fonts/Roboto-Regular.ttf");
+  const fontItalicPath = path.join(__dirname, "../fonts/Roboto-Italic.ttf");
+  const fontBoldPath = path.join(__dirname, "../fonts/Roboto-Bold.ttf");
+
+  if (!fs.existsSync(fontPath) || !fs.existsSync(fontBoldPath)) {
+    throw new Error("Font files not found");
+  }
+
+  const customFont = fs.readFileSync(fontPath);
+  const customFontBold = fs.readFileSync(fontBoldPath);
+  const customFontItalic = fs.readFileSync(fontItalicPath);
+  const fontReg = await pdfDoc.embedFont(customFont);
+  const fontRegItalic = await pdfDoc.embedFont(customFontItalic);
+  const fontBold = await pdfDoc.embedFont(customFontBold);
+
+  // Получаем первую страницу
+  const pages = pdfDoc.getPages();
+  const page = pages[0];
+
+  // Добавляем текст
+  const addText = (
+    text: string,
+    x: "center" | number,
+    y: number,
+    size = 12,
+    font = fontReg,
+  ) => {
+    let xPos = x;
+    if (x === "center") {
+      const textWidth = font.widthOfTextAtSize(text, size);
+      xPos = 50 + (page.getWidth() - textWidth) / 2;
+    }
+
+    page.drawText(text, {
+      x: xPos as number,
+      y,
+      size,
+      font,
+      color: rgb(0, 0, 0),
+    });
+  };
+
+  // ФИО студента
+  addText(
+    studentCourse.student.fullName.toUpperCase(),
+    TEMPLATE_COORDINATES.fullName.x,
+    TEMPLATE_COORDINATES.fullName.y,
+    18,
+    fontBold,
+  );
+
+  const CourseName = `${studentCourse.course.name.includes("Boshlang'ich") ? "Boshlang'ich kasbiy tayyorgarlik" : studentCourse.course.name.includes("Qayta tayyorlash") ? "Qayta tayyorlash" : "Malaka oshirish"} haqida`;
+
+  // Название курса
+  addText(
+    title || CourseName,
+    TEMPLATE_COORDINATES.courseName.x,
+    TEMPLATE_COORDINATES.courseName.y,
+    18,
+  );
+
+  // Серийный номер сертификата
+  addText(
+    certificateSeries,
+    TEMPLATE_COORDINATES.certificateSeries.x,
+    TEMPLATE_COORDINATES.certificateSeries.y,
+    13,
+    fontBold,
+  );
+
+  // Номер сертификата
+  addText(
+    certificateNumber,
+    TEMPLATE_COORDINATES.certificateNumber.x,
+    TEMPLATE_COORDINATES.certificateNumber.y,
+    10,
+    fontRegItalic,
+  );
+
+  // Разбиваем и фильтруем основное и дополнительное сообщение
+  const mainLines = splitAndClean(message);
+  const additionalLines = splitAndClean(additionalMessage);
+
+  const messageLines = [...mainLines, ...additionalLines];
+
+  // Индекс, начиная с которого текст должен быть жирным
+  const boldStartIndex = mainLines.length;
+
+  messageLines.forEach((line, index) => {
+    const font = index >= boldStartIndex ? fontBold : fontReg;
+
+    addText(
+      line,
+      TEMPLATE_COORDINATES.description.x,
+      TEMPLATE_COORDINATES.description.y - 30 * index,
+      16,
+      font,
+    );
+  });
+
+  // Дата выдачи
+  addText(
+    formatDate(date, "dd.MM.yyyy"),
+    TEMPLATE_COORDINATES.date.x,
+    TEMPLATE_COORDINATES.date.y,
+    11,
+    fontRegItalic,
+  );
+
+  // Генерация QR-кода
+  const qrUrl = `${process.env.BASE_URL}/certificates/${certificateSeries
+    .replace(/\s+/g, "")
+    .replace(/№/g, "")}.pdf`;
+  const qrImage = await QRCode.toBuffer(qrUrl);
+  const embeddedQr = await pdfDoc.embedPng(qrImage);
+  page.drawImage(embeddedQr, {
+    x: TEMPLATE_COORDINATES.qrCode.x as number,
+    y: TEMPLATE_COORDINATES.qrCode.y,
+    width: TEMPLATE_COORDINATES.qrCode.size,
+    height: TEMPLATE_COORDINATES.qrCode.size,
+  });
+
+  // Сохранение PDF
+  const pdfBytes = await pdfDoc.save();
+  const outputDir = path.join(
+    __dirname,
+    "../../data/certificates",
+  );
+
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  const fileName = `${certificateSeries.replace(/\s+/g, "").replace(/№/g, "")}.pdf`;
+  const outputPath = path.join(outputDir, fileName);
+  fs.writeFileSync(outputPath, pdfBytes);
+
+  // Обновление записи в БД
+  await prisma.studentCourse.update({
+    where: { id: studentCourseId },
+    data: {
+      certificateNumber: certificateSeries,
+      certificateUrl: `/certificates/${fileName}`,
+      createdAt: date ? new Date(date) : new Date(),
+    },
+  });
+
+  return {
+    success: true,
+    certificateUrl: `/certificates/${fileName}`,
+    certificateNumber: certificateSeries,
+  };
 }
 
 // Инициализация первого супер-админа при запуске

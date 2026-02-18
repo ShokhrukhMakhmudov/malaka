@@ -13,6 +13,7 @@ export default defineConfig({
     port: 4000,
     proxy: {
       '/api': 'http://localhost:5000',
+      '/certificates': 'http://localhost:5000',
     },
   },
   plugins: [
