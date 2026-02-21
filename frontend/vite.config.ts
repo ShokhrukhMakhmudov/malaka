@@ -8,7 +8,7 @@ import { resolve } from 'node:path'
 // https://vitejs.dev/config/
 export default defineConfig({
   server: {
-    allowedHosts: ['test.andijonpmm.uz'],
+    allowedHosts: ['ser.ipkmvd.uz'],
     host: '0.0.0.0',
     port: 4000,
     proxy: {

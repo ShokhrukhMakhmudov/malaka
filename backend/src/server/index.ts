@@ -27,6 +27,7 @@ const corsOptions = {
     "http://localhost:4000",
     "http://ser.ipkmvd.uz",
     "https://ser.ipkmvd.uz",
+    "http://30.1.254.78",
   ],
 };
 
@@ -683,10 +684,7 @@ async function generateCertificate({
 
   // Сохранение PDF
   const pdfBytes = await pdfDoc.save();
-  const outputDir = path.join(
-    __dirname,
-    "../../data/certificates",
-  );
+  const outputDir = path.join(__dirname, "../../data/certificates");
 
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
