@@ -197,6 +197,23 @@ app.post("/api/login", express.json(), async (req, res) => {
     return res.status(500).json({ error: "Server xatosi" });
   }
 });
+app.post("/api/students/check-passports", async (req, res) => {
+  try {
+    const { passports } = req.body as { passports: string[] };
+    if (!Array.isArray(passports) || passports.length === 0) {
+      return res.status(400).json({ error: "Invalid data" });
+    }
+    const existing = await prisma.student.findMany({
+      where: { passport: { in: passports } },
+      select: { passport: true, fullName: true },
+    });
+    res.json({ existing });
+  } catch (error) {
+    console.error("Check passports error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 app.post("/api/students/import", async (req, res) => {
   try {
     const { courseId, students, department, date } = req.body;

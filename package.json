@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "dev:server": "cd backend && npm run dev",
-    "dev:client": "cd frontend && npm run serve",
+    "dev:client": "cd frontend && npm run dev",
     "dev": "run-p dev:*"
   },
   "dependencies": {

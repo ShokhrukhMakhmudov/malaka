@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
 import { trpc } from '@/utils/trpc'
 
 export const Route = createFileRoute('/dashboard/courses/results')({
@@ -31,6 +32,7 @@ export const Route = createFileRoute('/dashboard/courses/results')({
 
 function CourseResultsPage() {
   const [selectedDate, setSelectedDate] = useState<string>('') // Пустая строка = все даты
+  const [searchTerm, setSearchTerm] = useState('')
   const [examResults, setExamResults] = useState<Record<string, boolean>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const queryClient = useQueryClient()
@@ -133,6 +135,12 @@ function CourseResultsPage() {
     Object.keys(examResults).length > 0 &&
     Object.values(examResults).some((value) => value !== false)
 
+  const filteredStudentCourses = searchTerm
+    ? studentCourses.filter((c) =>
+        c.student.fullName.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
+    : studentCourses
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -156,6 +164,12 @@ function CourseResultsPage() {
               ))}
             </SelectContent>
           </Select>
+          <Input
+            placeholder="Qidirish..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-[240px] h-9"
+          />
         </div>
 
         <Button
@@ -216,16 +230,18 @@ function CourseResultsPage() {
                   </TableCell>
                 </TableRow>
               ))
-            ) : studentCourses.length === 0 ? (
+            ) : filteredStudentCourses.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-8">
-                  {selectedDate
-                    ? "Tanlangan sana uchun ma'lumot topilmadi"
-                    : "Hech qanday ma'lumot topilmadi"}
+                  {searchTerm
+                    ? "Qidiruv bo'yicha ma'lumot topilmadi"
+                    : selectedDate
+                      ? "Tanlangan sana uchun ma'lumot topilmadi"
+                      : "Hech qanday ma'lumot topilmadi"}
                 </TableCell>
               </TableRow>
             ) : (
-              studentCourses.map((course) => (
+              filteredStudentCourses.map((course) => (
                 <TableRow key={course.id}>
                   <TableCell>{course.student.fullName}</TableCell>
                   <TableCell>{course.course.name}</TableCell>

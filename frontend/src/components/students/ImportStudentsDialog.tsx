@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -59,6 +61,21 @@ export default function ImportStudentsDialog({
   const [date, setDate] = useState<string>(
     () => new Date().toISOString().split('T')[0],
   )
+  const [collisions, setCollisions] = useState<
+    Array<{
+      passport: string
+      excelName: string
+      dbName: string
+      rowIndex: number
+    }>
+  >([])
+  const [collisionDecisions, setCollisionDecisions] = useState<
+    Record<string, 'import' | 'skip'>
+  >({})
+  const [collisionDialogOpen, setCollisionDialogOpen] = useState(false)
+  const [pendingSubmit, setPendingSubmit] = useState<
+    null | 'plain' | 'withCert'
+  >(null)
   const [title, setTitle] = useState('Malaka oshirish haqida')
   const [message, setMessage] = useState<string>(
     '2025-yilning 4-avgust kunidan 19-avgust kuniga qadar \n Ichki ishlar vazirligi Malaka oshirish institutida',
@@ -154,10 +171,63 @@ export default function ImportStudentsDialog({
     })
   }
 
+  // Проверка совпадений JSHIR с базой. Возвращает true если можно сразу слать,
+  // false если открыли диалог разрешения конфликтов.
+  const checkCollisions = async (
+    selectedIndexes: number[],
+    intent: 'plain' | 'withCert',
+  ): Promise<boolean> => {
+    const rows = selectedIndexes.map((i) => ({
+      rowIndex: i,
+      excelName: String(studentsData[i].fio).trim(),
+      passport: String(studentsData[i].passport),
+    }))
+    const passports = [...new Set(rows.map((r) => r.passport))]
+    if (passports.length === 0) return true
+
+    const res = await fetch(baseUrl + '/api/students/check-passports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ passports }),
+    })
+    const { existing } = (await res.json()) as {
+      existing: Array<{ passport: string; fullName: string }>
+    }
+    const dbByPassport = new Map(existing.map((s) => [s.passport, s.fullName]))
+
+    const found = rows
+      .filter((r) => dbByPassport.has(r.passport))
+      .map((r) => ({
+        passport: r.passport,
+        excelName: r.excelName,
+        dbName: dbByPassport.get(r.passport)!,
+        rowIndex: r.rowIndex,
+      }))
+
+    if (found.length === 0) return true
+
+    setCollisions(found)
+    setCollisionDecisions(
+      Object.fromEntries(found.map((c) => [c.passport, 'skip'])),
+    )
+    setPendingSubmit(intent)
+    setCollisionDialogOpen(true)
+    return false
+  }
+
   // Обработчик отправки формы
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (
+    e: { preventDefault?: () => void } | null,
+    skipPassports: Set<string> = new Set(),
+  ) => {
+    e?.preventDefault?.()
     if (!file || !courseId || !department || selectedStudents.size === 0) return
+
+    if (skipPassports.size === 0) {
+      const selectedIndexes = Array.from(selectedStudents)
+      const ok = await checkCollisions(selectedIndexes, 'plain')
+      if (!ok) return
+    }
 
     setIsSubmitting(true)
 
@@ -165,13 +235,15 @@ export default function ImportStudentsDialog({
       // Формируем данные для отправки
       const sendData = {
         courseId,
-        students: studentsData.map((student, index) => ({
-          fullName: student.fio,
-          passport: String(student.passport),
-          rank: student.unvon,
-          phone: student.phone,
-          examResult: selectedStudents.has(index),
-        })),
+        students: studentsData
+          .map((student, index) => ({
+            fullName: student.fio,
+            passport: String(student.passport),
+            rank: student.unvon,
+            phone: student.phone,
+            examResult: selectedStudents.has(index),
+          }))
+          .filter((s) => !skipPassports.has(s.passport)),
         department,
       }
 
@@ -284,9 +356,18 @@ export default function ImportStudentsDialog({
     await readExcelFile()
   }
 
-  const handleSubmitWithCertificate = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmitWithCertificate = async (
+    e: { preventDefault?: () => void } | null,
+    skipPassports: Set<string> = new Set(),
+  ) => {
+    e?.preventDefault?.()
     if (!file || !courseId || selectedStudents.size === 0) return
+
+    if (skipPassports.size === 0) {
+      const allIndexes = studentsData.map((_, i) => i)
+      const ok = await checkCollisions(allIndexes, 'withCert')
+      if (!ok) return
+    }
 
     setIsSubmitting(true)
 
@@ -303,7 +384,8 @@ export default function ImportStudentsDialog({
             rank: student.unvon,
             phone: student.phone,
             examResult: true,
-          })),
+          }))
+          .filter((s) => !skipPassports.has(s.passport)),
       }
 
       if (studentsData.length !== selectedStudents.size) {
@@ -319,7 +401,8 @@ export default function ImportStudentsDialog({
               rank: student.unvon,
               phone: student.phone,
               examResult: false,
-            })),
+            }))
+            .filter((s) => !skipPassports.has(s.passport)),
         }
 
         const response = await fetch(baseUrl + '/api/students/import', {
@@ -446,7 +529,26 @@ export default function ImportStudentsDialog({
     }
   }
 
+  const confirmCollisions = () => {
+    const skip = new Set(
+      Object.entries(collisionDecisions)
+        .filter(([, decision]) => decision === 'skip')
+        .map(([passport]) => passport),
+    )
+    const intent = pendingSubmit
+    setCollisionDialogOpen(false)
+    setCollisions([])
+    setCollisionDecisions({})
+    setPendingSubmit(null)
+    if (intent === 'plain') {
+      void handleSubmit(null, skip)
+    } else if (intent === 'withCert') {
+      void handleSubmitWithCertificate(null, skip)
+    }
+  }
+
   return (
+    <>
     <Dialog
       open={open}
       onOpenChange={(isOpen) => {
@@ -858,5 +960,102 @@ export default function ImportStudentsDialog({
         </AnimatePresence>
       </DialogContent>
     </Dialog>
+
+    <Dialog
+      open={collisionDialogOpen}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          setCollisionDialogOpen(false)
+          setCollisions([])
+          setCollisionDecisions({})
+          setPendingSubmit(null)
+        }
+      }}
+    >
+      <DialogContent className="lg:max-w-4xl w-full">
+        <DialogHeader>
+          <DialogTitle>JSHIR bo'yicha mos kelishlar topildi</DialogTitle>
+          <DialogDescription>
+            Quyidagi JSHIR-lar bazada mavjud. Iltimos, har bir qator uchun ism
+            mos kelishini tekshiring.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="max-h-[400px] overflow-y-auto">
+          <Table>
+            <TableHeader className="sticky top-0 bg-background">
+              <TableRow>
+                <TableHead>JSHIR</TableHead>
+                <TableHead>Excel FIO</TableHead>
+                <TableHead>Bazadagi FIO</TableHead>
+                <TableHead className="w-[200px]">Amal</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {collisions.map((c) => {
+                const namesDiffer =
+                  c.excelName.trim().toLowerCase() !==
+                  c.dbName.trim().toLowerCase()
+                return (
+                  <TableRow
+                    key={c.passport}
+                    className={namesDiffer ? 'bg-red-50 dark:bg-red-950/30' : ''}
+                  >
+                    <TableCell className="font-mono">{c.passport}</TableCell>
+                    <TableCell
+                      className={namesDiffer ? 'text-red-700 font-medium' : ''}
+                    >
+                      {c.excelName}
+                    </TableCell>
+                    <TableCell
+                      className={namesDiffer ? 'text-red-700 font-medium' : ''}
+                    >
+                      {c.dbName}
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={collisionDecisions[c.passport] ?? 'skip'}
+                        onValueChange={(value) =>
+                          setCollisionDecisions((prev) => ({
+                            ...prev,
+                            [c.passport]: value as 'import' | 'skip',
+                          }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="import">Import qilish</SelectItem>
+                          <SelectItem value="skip">
+                            O'tkazib yuborish
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setCollisionDialogOpen(false)
+              setCollisions([])
+              setCollisionDecisions({})
+              setPendingSubmit(null)
+            }}
+          >
+            Bekor qilish
+          </Button>
+          <Button onClick={confirmCollisions}>Davom etish</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }

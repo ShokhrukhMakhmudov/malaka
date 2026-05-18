@@ -34,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
 import { trpc } from '@/utils/trpc'
 
 export const Route = createFileRoute('/dashboard/certificates/generate')({
@@ -42,6 +43,7 @@ export const Route = createFileRoute('/dashboard/certificates/generate')({
 
 function GenerateCertificatesPage() {
   const [selectedDate, setSelectedDate] = useState<string>('')
+  const [searchTerm, setSearchTerm] = useState('')
   const [selectedCourses, setSelectedCourses] = useState<string[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -198,6 +200,12 @@ function GenerateCertificatesPage() {
     return course?.student.fullName || "Noma'lum"
   }
 
+  const filteredStudentCourses = searchTerm
+    ? studentCourses.filter((c) =>
+        c.student.fullName.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
+    : studentCourses
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -221,13 +229,19 @@ function GenerateCertificatesPage() {
               ))}
             </SelectContent>
           </Select>
+          <Input
+            placeholder="Qidirish..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-[240px] h-9"
+          />
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button
               onClick={handleGenerateClick}
-              disabled={selectedCourses.length === 0 || !selectedDate}
+              disabled={selectedCourses.length === 0}
             >
               Sertifikat yaratish
             </Button>
@@ -359,9 +373,7 @@ function GenerateCertificatesPage() {
                           .length
                     }
                     onCheckedChange={toggleSelectAll}
-                    disabled={
-                      isLoading || studentCourses.length === 0 || !selectedDate
-                    }
+                    disabled={isLoading || studentCourses.length === 0}
                   />
                 </div>
               </TableHead>
@@ -393,20 +405,18 @@ function GenerateCertificatesPage() {
                   </TableCell>
                 </TableRow>
               ))
-            ) : !selectedDate ? (
+            ) : filteredStudentCourses.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8">
-                  Iltimos, sana tanlang
-                </TableCell>
-              </TableRow>
-            ) : studentCourses.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
-                  Tanlangan sana uchun hech qanday ma'lumot topilmadi
+                  {searchTerm
+                    ? "Qidiruv bo'yicha ma'lumot topilmadi"
+                    : selectedDate
+                      ? "Tanlangan sana uchun hech qanday ma'lumot topilmadi"
+                      : "Hech qanday ma'lumot topilmadi"}
                 </TableCell>
               </TableRow>
             ) : (
-              studentCourses.map((course) => (
+              filteredStudentCourses.map((course) => (
                 <TableRow key={course.id}>
                   <TableCell>
                     <Checkbox
