@@ -185,13 +185,25 @@ export default function ImportStudentsDialog({
     const passports = [...new Set(rows.map((r) => r.passport))]
     if (passports.length === 0) return true
 
-    const res = await fetch(baseUrl + '/api/students/check-passports', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ passports }),
-    })
-    const { existing } = (await res.json()) as {
-      existing: Array<{ passport: string; fullName: string }>
+    let existing: Array<{ passport: string; fullName: string }>
+    try {
+      const res = await fetch(baseUrl + '/api/students/check-passports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passports }),
+      })
+      if (!res.ok) throw new Error('check-passports failed')
+      ;({ existing } = (await res.json()) as {
+        existing: Array<{ passport: string; fullName: string }>
+      })
+    } catch (error) {
+      console.error('Check passports error:', error)
+      toast("JSHIR tekshirishda xatolik. Qaytadan urinib ko'ring.", {
+        duration: 3000,
+        position: 'top-center',
+        icon: <XCircle className="text-red-500 w-7 h-7 pe-2" />,
+      })
+      return false
     }
     const dbByPassport = new Map(existing.map((s) => [s.passport, s.fullName]))
 
@@ -206,9 +218,14 @@ export default function ImportStudentsDialog({
 
     if (found.length === 0) return true
 
+    // В потоке выдачи сертификата дубликаты — это обычно уже существующие
+    // студенты, которым нужно повторно выдать сертификат, поэтому по умолчанию
+    // 'import'. В обычном импорте по умолчанию пропускаем.
+    const defaultDecision = intent === 'withCert' ? 'import' : 'skip'
+
     setCollisions(found)
     setCollisionDecisions(
-      Object.fromEntries(found.map((c) => [c.passport, 'skip'])),
+      Object.fromEntries(found.map((c) => [c.passport, defaultDecision])),
     )
     setPendingSubmit(intent)
     setCollisionDialogOpen(true)
@@ -218,16 +235,20 @@ export default function ImportStudentsDialog({
   // Обработчик отправки формы
   const handleSubmit = async (
     e: { preventDefault?: () => void } | null,
-    skipPassports: Set<string> = new Set(),
+    resolved?: { skip: Set<string> },
   ) => {
     e?.preventDefault?.()
     if (!file || !courseId || !department || selectedStudents.size === 0) return
 
-    if (skipPassports.size === 0) {
+    // resolved === undefined означает, что проверка дубликатов ещё не делалась.
+    // Пустой skip — валидный результат («импортировать всех»), он не должен
+    // повторно запускать проверку.
+    if (!resolved) {
       const selectedIndexes = Array.from(selectedStudents)
       const ok = await checkCollisions(selectedIndexes, 'plain')
       if (!ok) return
     }
+    const skipPassports = resolved?.skip ?? new Set<string>()
 
     setIsSubmitting(true)
 
@@ -345,6 +366,10 @@ export default function ImportStudentsDialog({
     setStep(1)
     setIsLoadingData(false)
     setIsSubmitting(false)
+    setCollisions([])
+    setCollisionDecisions({})
+    setCollisionDialogOpen(false)
+    setPendingSubmit(null)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -358,16 +383,17 @@ export default function ImportStudentsDialog({
 
   const handleSubmitWithCertificate = async (
     e: { preventDefault?: () => void } | null,
-    skipPassports: Set<string> = new Set(),
+    resolved?: { skip: Set<string> },
   ) => {
     e?.preventDefault?.()
     if (!file || !courseId || selectedStudents.size === 0) return
 
-    if (skipPassports.size === 0) {
+    if (!resolved) {
       const allIndexes = studentsData.map((_, i) => i)
       const ok = await checkCollisions(allIndexes, 'withCert')
       if (!ok) return
     }
+    const skipPassports = resolved?.skip ?? new Set<string>()
 
     setIsSubmitting(true)
 
@@ -541,9 +567,9 @@ export default function ImportStudentsDialog({
     setCollisionDecisions({})
     setPendingSubmit(null)
     if (intent === 'plain') {
-      void handleSubmit(null, skip)
+      void handleSubmit(null, { skip })
     } else if (intent === 'withCert') {
-      void handleSubmitWithCertificate(null, skip)
+      void handleSubmitWithCertificate(null, { skip })
     }
   }
 
